@@ -1,6 +1,4 @@
 var createError = require("http-errors");
-const path = require("path");
-process.env["NODE_CONFIG_DIR"] = path.join(path.resolve("./"), "config/");
 var express = require("express");
 var path = require("path");
 var cookieParser = require("cookie-parser");
@@ -16,6 +14,7 @@ var webseriesRouter = require("./routes/api/webseries");
 var patientsRouter = require("./routes/api/patients");
 var psychologistsRouter = require("./routes/api/psychologists");
 
+process.env["NODE_CONFIG_DIR"] = path.join(path.resolve("./"), "config/");
 var config = require("config");
 var cors = require("cors");
 var app = express();
