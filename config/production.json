@@ -1,4 +1,4 @@
 {
-  "db": "mongodb://localhost/productscrud",
+  "db": "mongodb+srv://uzairghaffar1144:15101962A@psychcare.jqqmzew.mongodb.net/?retryWrites=true&w=majority",
   "jwtPrivateKey": "SomePrivateKey"
 }
