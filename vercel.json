@@ -14,6 +14,6 @@
         }
     ],
     "env": {
-        "DATABASE_URL": "./config/production.json"
+        "DATABASE_URL": "./config"
       }
 }
