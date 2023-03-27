@@ -1,4 +1,6 @@
 var createError = require("http-errors");
+const path = require("path");
+process.env["NODE_CONFIG_DIR"] = path.join(path.resolve("./"), "config/");
 var express = require("express");
 var path = require("path");
 var cookieParser = require("cookie-parser");
