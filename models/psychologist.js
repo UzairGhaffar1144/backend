@@ -135,6 +135,7 @@ function validatePsychologist(data) {
     }),
     approved: Joi.boolean().default(false),
   });
+  return schema.validate(data, { abortEarly: false });
 }
 
 const Psychologist = mongoose.model("Psychologist", psychologistSchema);

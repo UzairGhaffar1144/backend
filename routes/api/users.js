@@ -1,7 +1,10 @@
 const express = require("express");
 let router = express.Router();
 
-let { User } = require("../../models/user");
+const { User } = require("../../models/user");
+const { Psychologist } = require("../../models/psychologist");
+const { Patient } = require("../../models/patient");
+
 var bcrypt = require("bcryptjs"); /// to hash passwords
 const _ = require("lodash"); ///// provides features to work with arrays like foreach map etc
 const jwt = require("jsonwebtoken"); /// token to verify genereated token
@@ -41,6 +44,19 @@ router.post("/login", async (req, res) => {
     config.get("jwtPrivateKey")
   );
 
-  res.send(token);
+  if (req.body.role == "psychologist") {
+    let psychologist = await Psychologist.findOne({
+      user_id: req.body._id,
+    }).populate("user_id");
+    user = psychologist; // update user object with psychologist data
+  }
+  if (req.body.role == "patient") {
+    let patient = await Patient.findOne({ user_id: req.body._id }).populate(
+      "user_id"
+    );
+    user = patient; // update user object with patient data
+  }
+  const datatoReturn = { user: user, token: token };
+  res.status(200).send(datatoReturn);
 });
 module.exports = router;

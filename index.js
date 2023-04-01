@@ -13,6 +13,8 @@ var moviesRouter = require("./routes/api/movies");
 var webseriesRouter = require("./routes/api/webseries");
 var patientsRouter = require("./routes/api/patients");
 var psychologistsRouter = require("./routes/api/psychologists");
+var discussionforumsRouter = require("./routes/api/discussionforums");
+var appointmentsRouter = require("./routes/api/appointments");
 
 process.env["NODE_CONFIG_DIR"] = path.join(path.resolve("./"), "config/");
 var config = require("config");
@@ -32,6 +34,8 @@ app.use("/", indexRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/users/patients", patientsRouter);
 app.use("/api/users/psychologists", psychologistsRouter);
+app.use("/api/appointments", appointmentsRouter);
+app.use("/api/discussionforums", discussionforumsRouter);
 
 app.use("/api/products", productsRouter);
 app.use("/api/movies", moviesRouter);

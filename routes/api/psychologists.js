@@ -74,7 +74,7 @@ router.post("/addnewpsychologist", async (req, res) => {
       approved,
     });
 
-    psychologist = await psychologist.save();
+    await psychologist.save();
     res.send(psychologist);
   } catch (err) {
     console.error(err);

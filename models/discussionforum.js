@@ -39,7 +39,7 @@ const discussionforumSchema = new mongoose.Schema({
   ],
 });
 
-function validateForum(forum) {
+function validateDiscussionforum(data) {
   const schema = Joi.object({
     user_id: Joi.objectId().required(),
     title: Joi.string().required(),
@@ -51,6 +51,7 @@ function validateForum(forum) {
       })
     ),
   });
+  return schema.validate(data, { abortEarly: false });
 }
 
 const Discussionforum = mongoose.model(
