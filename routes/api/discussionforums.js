@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-var { DiscussionForum } = require("../models/discussionforum");
+var { Discussionforum } = require("../models/discussionforum");
 var { User } = require("../../models/user");
 
 const validateDiscussionforum = require("../../middlewares/validateDiscussionforum");
@@ -12,7 +12,7 @@ router.post("/", async (req, res) => {
   //auth to be added
   try {
     const { title, description, user_id } = req.body;
-    const discussionForum = new DiscussionForum({
+    const discussionForum = new Discussionforum({
       user_id,
       title,
       description,
@@ -28,7 +28,7 @@ router.post("/", async (req, res) => {
 // GET all discussion forum topics
 router.get("/", async (req, res) => {
   try {
-    const discussionForums = await DiscussionForum.find().populate("user_id");
+    const discussionForums = await Discussionforum.find().populate("user_id");
     res.send(discussionForums);
   } catch (error) {
     console.error(error);
@@ -39,7 +39,7 @@ router.get("/", async (req, res) => {
 // GET a specific discussion forum topic by ID
 router.get("/:id", async (req, res) => {
   try {
-    const discussionForum = await DiscussionForum.findById(
+    const discussionForum = await Discussionforum.findById(
       req.params.id
     ).populate("user_id");
     if (!discussionForum) {
@@ -56,7 +56,7 @@ router.get("/:id", async (req, res) => {
 router.post("/:id/comments", async (req, res) => {
   try {
     const { user_id, content } = req.body;
-    const discussionForum = await DiscussionForum.findById(req.params.id);
+    const discussionForum = await Discussionforum.findById(req.params.id);
     if (!discussionForum) {
       return res.status(404).send("Discussion forum not found");
     }
@@ -72,7 +72,7 @@ router.post("/:id/comments", async (req, res) => {
 // Delete a discussion forum topic
 router.delete("/:id", async (req, res) => {
   try {
-    const discussionForum = await DiscussionForum.findById(req.params.id);
+    const discussionForum = await Discussionforum.findById(req.params.id);
     if (!discussionForum) {
       return res.status(404).send("Discussion forum not found");
     }
