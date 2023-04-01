@@ -46,13 +46,11 @@ router.post("/addnewpatient", async (req, res) => {
     } = req.body;
     console.log(user_id);
     // Check if user exists
-    try {
-      const user = await User.findById(user_id);
-    } catch (err) {
-      console.error(err.message);
-      return res.status(404).send("User not found");
-    }
 
+    const user = await User.findById(user_id);
+    if (!user) {
+      return res.status(400).send("User does not exist");
+    }
     // Check if patient already exists
     const existingPatient = await Patient.findOne({ user_id, patient_name });
     if (existingPatient) {
