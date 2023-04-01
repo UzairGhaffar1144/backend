@@ -44,13 +44,13 @@ router.post("/login", async (req, res) => {
     config.get("jwtPrivateKey")
   );
 
-  if (req.body.role == "psychologist") {
+  if (user.role == "psychologist") {
     let psychologist = await Psychologist.findOne({
       user_id: req.body._id,
     }).populate("user_id");
     user = psychologist; // update user object with psychologist data
   }
-  if (req.body.role == "patient") {
+  if (user.role == "patient") {
     let patient = await Patient.findOne({ user_id: req.body._id }).populate(
       "user_id"
     );
