@@ -46,11 +46,11 @@ router.post("/login", async (req, res) => {
 
   if (user.role == "psychologist") {
     let psychologist = await Psychologist.findOne({
-      user_id: req.body._id,
+      user_id: user._id,
     }).populate("user_id");
     user = psychologist; // update user object with psychologist data
   } else if (user.role == "patient") {
-    let patient = await Patient.findOne({ user_id: req.body._id }).populate(
+    let patient = await Patient.findOne({ user_id: user._id }).populate(
       "user_id"
     );
     user = patient; // update user object with patient data
