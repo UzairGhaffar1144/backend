@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-var { Discussionforum } = require("../models/discussionforum");
+var { Discussionforum } = require("../../models/discussionforum");
 var { User } = require("../../models/user");
 
 const validateDiscussionforum = require("../../middlewares/validateDiscussionforum");
