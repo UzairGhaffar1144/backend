@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const { Appointment } = require("../models/appointment");
-const { Patient } = require("../models/patient");
-const { Psychologist } = require("../models/psychologist");
+const { Appointment } = require("../../models/appointment");
+const { Patient } = require("../../models/patient");
+const { Psychologist } = require("../../models/psychologist");
 
 // POST a new appointment
 router.post("/", async (req, res) => {
