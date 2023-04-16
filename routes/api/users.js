@@ -34,6 +34,16 @@ router.post("/register", async (req, res) => {
   return res.send(datatoReturn);
 });
 
+//get user
+router.get("/:id", async (req, res) => {
+  try {
+    let user = await User.findById(req.params.id);
+    if (!user) return res.status(400).send("user With given ID is not present"); //when id is not present id db
+    return res.send(user); //everything is ok
+  } catch (err) {
+    return res.status(400).send("Invalid ID"); // format of id is not correct
+  }
+});
 router.post("/login", async (req, res) => {
   let user = await User.findOne({ email: req.body.email });
   if (!user) return res.status(400).send("User Not Registered");
