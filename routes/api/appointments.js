@@ -60,7 +60,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// PUT an existing appointment by ID
+// update an existing appointment by ID
 router.put("/:id", async (req, res) => {
   try {
     const patient = await Patient.findById(req.body.patient_id);
@@ -68,22 +68,36 @@ router.put("/:id", async (req, res) => {
 
     const psychologist = await Psychologist.findById(req.body.psychologist_id);
     if (!psychologist) return res.status(404).send("Psychologist not found");
-
-    const appointment = await Appointment.findByIdAndUpdate(
-      req.params.id,
-      {
-        patient_id: req.body.patient_id,
-        psychologist_id: req.body.psychologist_id,
-        time: req.body.time,
-        status: req.body.status,
-        prescription: req.body.prescription,
-        notes: req.body.notes,
-      },
-      { new: true }
-    );
-
+    const appointment = await Appointment.findById(req.params.id);
     if (!appointment) return res.status(404).send("Appointment not found");
+
+    appointment.patient_id = req.body.patient_id;
+    appointment.psychologist_id = req.body.psychologist_id;
+    appointment.time = req.body.time;
+    appointment.status = req.body.status;
+    appointment.prescription = req.body.prescription;
+    appointment.notes = req.body.notes;
+    appointment.reschedule_count = appointment.reschedule_count + 1;
+
+    await appointment.save();
+
     res.send(appointment);
+    // const appointment = await Appointment.findByIdAndUpdate(
+    //   req.params.id,
+    //   {
+    //     patient_id: req.body.patient_id,
+    //     psychologist_id: req.body.psychologist_id,
+    //     time: req.body.time,
+    //     status: req.body.status,
+    //     prescription: req.body.prescription,
+    //     notes: req.body.notes,
+    //     reschedule_count : appointment.reschedule_count + 1
+    //   },
+    //   { new: true }
+    // );
+
+    // if (!appointment) return res.status(404).send("Appointment not found");
+    // res.send(appointment);
   } catch (err) {
     console.error(err.message);
     res.status(500).send("Server error");

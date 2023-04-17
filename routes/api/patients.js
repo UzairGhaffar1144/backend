@@ -11,7 +11,7 @@ var { User } = require("../../models/user");
 
 router.get("/", async (req, res) => {
   try {
-    const patients = await Patient.find().populate("user_id");
+    const patients = await Patient.find().populate("user_id", "-password");
     res.send(patients);
   } catch (err) {
     console.error(err.message);
@@ -22,7 +22,10 @@ router.get("/", async (req, res) => {
 // GET a single patient by ID
 router.get("/:id", async (req, res) => {
   try {
-    const patient = await Patient.findById(req.params.id).populate("user_id");
+    const patient = await Patient.findById(req.params.id).populate(
+      "user_id",
+      "-password"
+    );
     if (!patient) return res.status(404).send("Patient not found");
 
     res.send(patient);

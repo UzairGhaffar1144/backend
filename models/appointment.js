@@ -30,6 +30,18 @@ const appointmentSchema = mongoose.Schema({
     type: String,
     required: true,
   },
+  review_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Review",
+  },
+  reviewed: {
+    type: Boolean,
+    default: false,
+  },
+  reschedule_count: {
+    type: Number,
+    default: 0,
+  },
 });
 
 const Appointment = mongoose.model("Appointment", appointmentSchema);
@@ -38,6 +50,7 @@ function validateAppointment(data) {
   const schema = Joi.object({
     patient_id: Joi.string().required(),
     psychologist_id: Joi.string().required(),
+    review_id: Joi.string(),
     time: Joi.date().required(),
     status: Joi.string()
       .valid("upcoming", "completed", "cancelled")
@@ -45,6 +58,8 @@ function validateAppointment(data) {
       .required(),
     prescription: Joi.string().required(),
     notes: Joi.string().required(),
+    reschedule_count: Joi.number(),
+    reviewed: Joi.boolean().default(false),
   });
 
   return schema.validate(data, { abortEarly: false });

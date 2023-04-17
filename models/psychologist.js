@@ -6,7 +6,12 @@ const psychologistSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
   },
+
   psychologist_name: {
+    type: String,
+    required: true,
+  },
+  degree: {
     type: String,
     required: true,
   },
@@ -14,9 +19,12 @@ const psychologistSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  about: {
+    type: String,
+  },
+
   experience: {
     type: Number,
-    required: true,
   },
   rating: {
     type: Number,
@@ -25,30 +33,23 @@ const psychologistSchema = new mongoose.Schema({
   onlineAppointment: {
     fee: {
       type: Number,
-      required: true,
     },
     schedule: [
       {
         day: {
           type: String,
-          required: true,
         },
         slots: [
           {
             start: {
               type: String,
-              required: true,
             },
             end: {
               type: String,
-              required: true,
             },
             available: {
               type: Boolean,
               default: true,
-            },
-            notes: {
-              type: String,
             },
           },
         ],
@@ -58,27 +59,27 @@ const psychologistSchema = new mongoose.Schema({
   onsiteAppointment: {
     fee: {
       type: Number,
-      required: true,
+    },
+    city: {
+      type: String,
     },
     location: {
       type: String,
-      required: true,
     },
     schedule: [
       {
         day: {
           type: String,
-          required: true,
         },
         slots: [
           {
             start: {
               type: String,
-              required: true,
+              required: false,
             },
             end: {
               type: String,
-              required: true,
+              required: false,
             },
             available: {
               type: Boolean,
@@ -99,17 +100,19 @@ function validatePsychologist(data) {
     user_id: Joi.string().required(),
     psychologist_name: Joi.string().required(),
     specialization: Joi.string().required(),
-    experience: Joi.number().required(),
+    degree: Joi.string().required(),
+    about: Joi.string(),
+    experience: Joi.number(),
     rating: Joi.number().default(0),
     onlineAppointment: Joi.object({
-      fee: Joi.number().required(),
+      fee: Joi.number(),
       schedule: Joi.array().items(
         Joi.object({
-          day: Joi.string().required(),
+          day: Joi.string(),
           slots: Joi.array().items(
             Joi.object({
-              start: Joi.string().required(),
-              end: Joi.string().required(),
+              start: Joi.string(),
+              end: Joi.string(),
               available: Joi.boolean().default(true),
             })
           ),
@@ -117,17 +120,17 @@ function validatePsychologist(data) {
       ),
     }),
     onsiteAppointment: Joi.object({
-      fee: Joi.number().required(),
-      location: Joi.string().required(),
+      fee: Joi.number(),
+      location: Joi.string(),
+      city: Joi.string(),
       schedule: Joi.array().items(
         Joi.object({
-          day: Joi.string().required(),
+          day: Joi.string(),
           slots: Joi.array().items(
             Joi.object({
-              start: Joi.string().required(),
-              end: Joi.string().required(),
+              start: Joi.string(),
+              end: Joi.string(),
               available: Joi.boolean().default(true),
-              notes: Joi.string().allow(null, ""),
             })
           ),
         })

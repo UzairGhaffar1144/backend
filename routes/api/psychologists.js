@@ -12,7 +12,10 @@ var { User } = require("../../models/user");
 // Get all psychologists
 router.get("/", async (req, res) => {
   try {
-    const psychologists = await Psychologist.find().populate("user_id");
+    const psychologists = await Psychologist.find().populate(
+      "user_id",
+      "-password"
+    );
     res.send(psychologists);
   } catch (error) {
     console.log(error);
@@ -24,7 +27,8 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   try {
     const psychologist = await Psychologist.findById(req.params.id).populate(
-      "user_id"
+      "user_id",
+      "-password"
     );
     if (!psychologist) return res.status(404).send("Psychologist not found");
     res.send(psychologist);
@@ -41,6 +45,8 @@ router.post("/addnewpsychologist", async (req, res) => {
       user_id,
       psychologist_name,
       specialization,
+      degree,
+      about,
       experience,
       rating,
       onlineAppointment,
@@ -67,6 +73,8 @@ router.post("/addnewpsychologist", async (req, res) => {
       user_id,
       psychologist_name,
       specialization,
+      degree,
+      about,
       experience,
       rating,
       onlineAppointment,
@@ -93,6 +101,8 @@ router.put("/:id", async (req, res) => {
         specialization: req.body.specialization,
         experience: req.body.experience,
         rating: req.body.rating,
+        about: req.body.about,
+        degree: req.body.degree,
         onlineAppointment: req.body.onlineAppointment,
         onsiteAppointment: req.body.onsiteAppointment,
         approved: req.body.approved,
