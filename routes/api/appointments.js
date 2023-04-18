@@ -68,18 +68,27 @@ router.put("/:id", async (req, res) => {
 
     const psychologist = await Psychologist.findById(req.body.psychologist_id);
     if (!psychologist) return res.status(404).send("Psychologist not found");
-    const appointment = await Appointment.findById(req.params.id);
+    const updateObject = {};
+    for (const [key, value] of Object.entries(req.body)) {
+      updateObject[key] = value;
+    }
+    // const appointment = await Appointment.findById(req.params.id);
+    const appointment = await Appointment.findByIdAndUpdate(
+      req.params.id,
+      { $set: updateObject },
+      { new: true }
+    ).populate("user_id", "-password");
     if (!appointment) return res.status(404).send("Appointment not found");
+    
+    // appointment.patient_id = req.body.patient_id;
+    // appointment.psychologist_id = req.body.psychologist_id;
+    // appointment.time = req.body.time;
+    // appointment.status = req.body.status;
+    // appointment.prescription = req.body.prescription;
+    // appointment.notes = req.body.notes;
+    // appointment.reschedule_count = appointment.reschedule_count + 1;
 
-    appointment.patient_id = req.body.patient_id;
-    appointment.psychologist_id = req.body.psychologist_id;
-    appointment.time = req.body.time;
-    appointment.status = req.body.status;
-    appointment.prescription = req.body.prescription;
-    appointment.notes = req.body.notes;
-    appointment.reschedule_count = appointment.reschedule_count + 1;
-
-    await appointment.save();
+    // await appointment.save();
 
     res.send(appointment);
     // const appointment = await Appointment.findByIdAndUpdate(

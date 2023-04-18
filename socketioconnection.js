@@ -6,9 +6,11 @@ const UserSocket = require("./models/socket").Socket;
 function socketConnection(server) {
   const io = socketio(server, {
     cors: {
-      origin: "http://localhost:3000",
+      methods: ["GET", "POST"],
+      transports: ["websocket", "polling"],
+      credentials: true,
     },
-    
+    allowEIO3: true,
   });
   // require("socket.io")(8900, {
   //   cors: {

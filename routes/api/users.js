@@ -19,6 +19,7 @@ router.post("/register", async (req, res) => {
   user.name = req.body.name;
   user.email = req.body.email;
   user.password = req.body.password;
+  user.role = req.body.role || "patient";
   await user.generateHashedPassword();
   await user.save();
   let token = jwt.sign(

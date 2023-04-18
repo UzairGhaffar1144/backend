@@ -10,7 +10,7 @@ var { Psychologist } = require("../../models/psychologist");
 var { User } = require("../../models/user");
 
 // Get all psychologists
-router.get("/", async (req, res) => {
+router.get("/allpsychologists", async (req, res) => {
   try {
     const psychologists = await Psychologist.find().populate(
       "user_id",
@@ -93,22 +93,16 @@ router.post("/addnewpsychologist", async (req, res) => {
 // PUT (update) an existing psychologist
 router.put("/:id", async (req, res) => {
   try {
+    const updateObject = {};
+    for (const [key, value] of Object.entries(req.body)) {
+      updateObject[key] = value;
+    }
+
     const psychologist = await Psychologist.findByIdAndUpdate(
       req.params.id,
-      {
-        user_id: req.body.user_id,
-        psychologist_name: req.body.psychologist_name,
-        specialization: req.body.specialization,
-        experience: req.body.experience,
-        rating: req.body.rating,
-        about: req.body.about,
-        degree: req.body.degree,
-        onlineAppointment: req.body.onlineAppointment,
-        onsiteAppointment: req.body.onsiteAppointment,
-        approved: req.body.approved,
-      },
+      { $set: updateObject },
       { new: true }
-    );
+    ).populate("user_id", "-password");
     if (!psychologist)
       return res
         .status(404)

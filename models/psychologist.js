@@ -6,11 +6,6 @@ const psychologistSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
   },
-
-  psychologist_name: {
-    type: String,
-    required: true,
-  },
   degree: {
     type: String,
     required: true,
@@ -19,13 +14,14 @@ const psychologistSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  experience: {
+    type: Number,
+    required: true,
+  },
   about: {
     type: String,
   },
 
-  experience: {
-    type: Number,
-  },
   rating: {
     type: Number,
     default: 0,
@@ -75,11 +71,9 @@ const psychologistSchema = new mongoose.Schema({
           {
             start: {
               type: String,
-              required: false,
             },
             end: {
               type: String,
-              required: false,
             },
             available: {
               type: Boolean,
@@ -98,11 +92,10 @@ const psychologistSchema = new mongoose.Schema({
 function validatePsychologist(data) {
   const schema = Joi.object({
     user_id: Joi.string().required(),
-    psychologist_name: Joi.string().required(),
     specialization: Joi.string().required(),
     degree: Joi.string().required(),
+    experience: Joi.number().required(),
     about: Joi.string(),
-    experience: Joi.number(),
     rating: Joi.number().default(0),
     onlineAppointment: Joi.object({
       fee: Joi.number(),

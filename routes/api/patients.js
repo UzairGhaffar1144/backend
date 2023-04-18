@@ -9,9 +9,9 @@ const admin = require("../../middlewares/admin");
 var { Patient } = require("../../models/patient");
 var { User } = require("../../models/user");
 
-router.get("/", async (req, res) => {
+router.get("/allpatients", async (req, res) => {
   try {
-    const patients = await Patient.find().populate("user_id", "-password");
+    const patients = await Patient.find().populate("user_id");
     res.send(patients);
   } catch (err) {
     console.error(err.message);
@@ -45,7 +45,7 @@ router.post("/addnewpatient", async (req, res) => {
       gender,
       occupation,
       contact_number,
-      records,
+      // records,
     } = req.body;
     console.log(user_id);
     // Check if user exists
@@ -67,8 +67,8 @@ router.post("/addnewpatient", async (req, res) => {
       gender,
       occupation,
       contact_number,
-      records,
-    });
+      // records,
+    }).populate("user_id", "-password");
 
     await patient.save();
     res.send(patient);
@@ -81,21 +81,30 @@ router.post("/addnewpatient", async (req, res) => {
 // PUT/update an existing patient by ID
 router.put("/:id", async (req, res) => {
   try {
-    const user = await User.findById(req.body.user_id);
-    if (!user) return res.status(404).send("uUer not found");
+    // const user = await User.findById(req.params.id);
+    // if (!user) return res.status(404).send("user not found");
 
-    const patient = await Patient.findOneAndUpdate(
-      { user_id: req.params.id },
-      {
-        patient_name: req.body.patient_name,
-        age: req.body.age,
-        gender: req.body.gender,
-        occupation: req.body.occupation,
-        contact_number: req.body.contact_number,
-        records: req.body.records,
-      },
+    // const patient = await Patient.findOneAndUpdate(
+    //   { user_id: req.params.id },
+    //   {
+    //     patient_name: req.body.patient_name,
+    //     age: req.body.age,
+    //     gender: req.body.gender,
+    //     occupation: req.body.occupation,
+    //     contact_number: req.body.contact_number,
+    //     // records: req.body.records,
+    //   },
+    //   { new: true }
+    const updateObject = {};
+    for (const [key, value] of Object.entries(req.body)) {
+      updateObject[key] = value;
+    }
+
+    const patient = await Patient.findByIdAndUpdate(
+      req.params.id,
+      { $set: updateObject },
       { new: true }
-    ).populate("user_id");
+    ).populate("user_id", "-password");
 
     if (!patient) return res.status(404).send("Patient not found");
     res.send(patient);

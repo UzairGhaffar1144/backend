@@ -7,7 +7,7 @@ var userSchema = mongoose.Schema({
   password: String,
   role: {
     type: String,
-    default: "user",
+    default: "patient",
   },
 });
 userSchema.methods.generateHashedPassword = async function () {
