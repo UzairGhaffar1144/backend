@@ -10,6 +10,14 @@ const psychologistSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  contactnumber: {
+    type: String,
+    required: true,
+  },
+  gender: {
+    type: String,
+    required: true,
+  },
   specialization: {
     type: String,
     required: true,
@@ -59,6 +67,9 @@ const psychologistSchema = new mongoose.Schema({
     city: {
       type: String,
     },
+    practicelocation: {
+      type: String,
+    },
     location: {
       type: String,
     },
@@ -94,6 +105,8 @@ function validatePsychologist(data) {
     user_id: Joi.string().required(),
     specialization: Joi.string().required(),
     degree: Joi.string().required(),
+    contactnumber: Joi.string().required(),
+    gender: Joi.string().required(),
     experience: Joi.number().required(),
     about: Joi.string(),
     rating: Joi.number().default(0),
@@ -116,6 +129,7 @@ function validatePsychologist(data) {
       fee: Joi.number(),
       location: Joi.string(),
       city: Joi.string(),
+      practicelocation: Joi.string(),
       schedule: Joi.array().items(
         Joi.object({
           day: Joi.string(),
