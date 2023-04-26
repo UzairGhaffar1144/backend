@@ -7,8 +7,20 @@ const { Psychologist } = require("../../models/psychologist");
 // POST a new appointment
 router.post("/", async (req, res) => {
   try {
-    const { patient_id, psychologist_id, time, status, prescription, notes } =
-      req.body;
+    const {
+      patient_id,
+      psychologist_id,
+      time,
+      status,
+      notes,
+      prescription,
+      location,
+      fee,
+      appointmenttype,
+      reviewed,
+      review_id,
+      reschedule_count,
+    } = req.body;
 
     const patient = await Patient.findById(patient_id);
     if (!patient) return res.status(404).send("Patient not found");
@@ -21,8 +33,14 @@ router.post("/", async (req, res) => {
       psychologist_id,
       time,
       status,
-      prescription,
       notes,
+      prescription,
+      location,
+      fee,
+      appointmenttype,
+      reviewed,
+      review_id,
+      reschedule_count,
     });
 
     await appointment.save();
@@ -46,28 +64,23 @@ router.get("/", async (req, res) => {
   }
 });
 
-// GET a single appointment by ID
-router.get("/:id", async (req, res) => {
-  try {
-    const appointment = await Appointment.findById(req.params.id)
-      .populate("patient_id")
-      .populate("psychologist_id");
-    if (!appointment) return res.status(404).send("Appointment not found");
-    res.send(appointment);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send("Server error");
-  }
-});
+// // GET a single appointment by ID
+// router.get("/:id", async (req, res) => {
+//   try {
+//     const appointment = await Appointment.findById(req.params.id)
+//       .populate("patient_id")
+//       .populate("psychologist_id");
+//     if (!appointment) return res.status(404).send("Appointment not found");
+//     res.send(appointment);
+//   } catch (err) {
+//     console.error(err.message);
+//     res.status(500).send("Server error");
+//   }
+// });
 
 // update an existing appointment by ID
 router.put("/:id", async (req, res) => {
   try {
-    const patient = await Patient.findById(req.body.patient_id);
-    if (!patient) return res.status(404).send("Patient not found");
-
-    const psychologist = await Psychologist.findById(req.body.psychologist_id);
-    if (!psychologist) return res.status(404).send("Psychologist not found");
     const updateObject = {};
     for (const [key, value] of Object.entries(req.body)) {
       updateObject[key] = value;
@@ -77,9 +90,11 @@ router.put("/:id", async (req, res) => {
       req.params.id,
       { $set: updateObject },
       { new: true }
-    ).populate("user_id", "-password");
+    );
+    // .populate("patient_id")
+    // .populate("psychologist_id", "-onlineAppointment", "-onsiteAppointment");
     if (!appointment) return res.status(404).send("Appointment not found");
-    
+
     // appointment.patient_id = req.body.patient_id;
     // appointment.psychologist_id = req.body.psychologist_id;
     // appointment.time = req.body.time;
@@ -131,11 +146,17 @@ router.delete("/:id", async (req, res) => {
 // GET all appointments for a psychologist
 router.get("/psychologist/:psychologistId", async (req, res) => {
   try {
+    const psychologist = await Psychologist.findById(req.params.psychologistId);
+    if (!psychologist) return res.status(404).send("psychologistt not found");
     const appointments = await Appointment.find({
       psychologist_id: req.params.psychologistId,
-    })
-      .populate("patient_id")
-      .populate("psychologist_id");
+    }).populate({
+      path: "patient_id",
+      populate: {
+        path: "user_id",
+        select: "name email",
+      },
+    });
     res.send(appointments);
   } catch (err) {
     console.error(err.message);
@@ -146,11 +167,18 @@ router.get("/psychologist/:psychologistId", async (req, res) => {
 // GET all appointments for a patient
 router.get("/patient/:patientId", async (req, res) => {
   try {
+    const patient = await Patient.findById(req.params.patientId);
+    if (!patient) return res.status(404).send("patient not found");
     const appointments = await Appointment.find({
       patient_id: req.params.patientId,
-    })
-      .populate("patient_id")
-      .populate("psychologist_id");
+    }).populate({
+      path: "psychologist_id",
+      select: "-onlineAppointment -onsiteAppointment",
+      populate: {
+        path: "user_id",
+        select: "name email",
+      },
+    });
 
     res.send(appointments);
   } catch (err) {

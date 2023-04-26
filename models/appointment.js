@@ -20,13 +20,22 @@ const appointmentSchema = mongoose.Schema({
     type: String,
     enum: ["upcoming", "completed", "cancelled"],
     default: "upcoming",
-    required: true,
   },
   prescription: {
     type: String,
-    required: true,
   },
   notes: {
+    type: String,
+  },
+  location: {
+    type: String,
+  },
+  appointmenttype: {
+    type: String,
+    enum: ["onsite", "online"],
+    required: true,
+  },
+  fee: {
     type: String,
     required: true,
   },
