@@ -10,7 +10,7 @@ router.post("/", async (req, res) => {
     const {
       patient_id,
       psychologist_id,
-      time,
+      datetime,
       status,
       notes,
       prescription,
@@ -31,7 +31,7 @@ router.post("/", async (req, res) => {
     const appointment = new Appointment({
       patient_id,
       psychologist_id,
-      time,
+      datetime,
       status,
       notes,
       prescription,

@@ -50,6 +50,7 @@ router.post("/login", async (req, res) => {
   if (!user) return res.status(400).send("User Not Registered");
   let isValid = await bcrypt.compare(req.body.password, user.password);
   if (!isValid) return res.status(401).send("Invalid Password");
+  user.password = undefined;
   let token = jwt.sign(
     { _id: user._id, name: user.name, role: user.role },
     config.get("jwtPrivateKey")
@@ -58,13 +59,14 @@ router.post("/login", async (req, res) => {
   if (user.role == "psychologist") {
     let psychologist = await Psychologist.findOne({
       user_id: user._id,
-    }).populate("user_id");
-    user = psychologist; // update user object with psychologist data
+    }).populate("user_id", "-password");
+    if (psychologist) user = psychologist; // update user object with psychologist data
   } else if (user.role == "patient") {
     let patient = await Patient.findOne({ user_id: user._id }).populate(
-      "user_id"
+      "user_id",
+      "-password"
     );
-    user = patient; // update user object with patient data
+    if (patient) user = patient; // update user object with patient data
   }
   const datatoReturn = { user: user, token: token };
   res.status(200).send(datatoReturn);

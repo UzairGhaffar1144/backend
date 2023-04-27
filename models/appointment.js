@@ -12,9 +12,9 @@ const appointmentSchema = mongoose.Schema({
     ref: "Psychologist",
     required: true,
   },
-  time: {
-    type: Date,
-    required: true,
+  datetime: {
+    time: { type: String, required: true },
+    date: { type: String, required: true },
   },
   status: {
     type: String,
