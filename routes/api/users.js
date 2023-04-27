@@ -19,13 +19,17 @@ router.post("/register", async (req, res) => {
   user.name = req.body.name;
   user.email = req.body.email;
   user.password = req.body.password;
-  user.role = req.body.role || "patient";
+  user.role = req.body.role;
   await user.generateHashedPassword();
   await user.save();
   let token = jwt.sign(
     { _id: user._id, name: user.name, role: user.role },
     config.get("jwtPrivateKey")
   );
+  if (user.role == "patient") {
+    const patient = new Patient({ user_id: user._id });
+    await patient.save();
+  }
   let datatoReturn = {
     name: user.name,
     email: user.email,
@@ -66,7 +70,7 @@ router.post("/login", async (req, res) => {
       "user_id",
       "-password"
     );
-    if (patient) user = patient; // update user object with patient data
+    user = patient; // update user object with patient data
   }
   const datatoReturn = { user: user, token: token };
   res.status(200).send(datatoReturn);

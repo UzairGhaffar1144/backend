@@ -9,19 +9,16 @@ const patientSchema = mongoose.Schema({
   },
   age: {
     type: Number,
-    required: true,
   },
   gender: {
     type: String,
     enum: ["Male", "Female", "Other"],
-    required: true,
   },
   occupation: {
     type: String,
   },
   contact_number: {
     type: String,
-    required: true,
   },
   // records:[
   //     {
