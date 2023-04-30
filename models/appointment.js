@@ -26,6 +26,9 @@ const appointmentSchema = mongoose.Schema({
     enum: ["upcoming", "completed", "cancelled", "reschedule"],
     default: "upcoming",
   },
+  reschedule_reason: {
+    type: String,
+  },
   prescription: {
     type: String,
   },

@@ -192,6 +192,7 @@ router.put("/:id", async (req, res) => {
             newAppointmentSlot.available = false;
           }
         }
+        updateObject.reschedule_reason = req.body.reschedule_reason;
       }
 
       await psychologist.save();
