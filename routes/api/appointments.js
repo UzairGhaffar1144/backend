@@ -4,6 +4,8 @@ const { Appointment } = require("../../models/appointment");
 const { Patient } = require("../../models/patient");
 const { Psychologist } = require("../../models/psychologist");
 
+const { Review } = require("../../models/review");
+
 // POST a new appointment
 router.post("/", async (req, res) => {
   try {
@@ -27,6 +29,38 @@ router.post("/", async (req, res) => {
 
     const psychologist = await Psychologist.findById(psychologist_id);
     if (!psychologist) return res.status(404).send("Psychologist not found");
+    const { day, time } = datetime;
+
+    // Find the corresponding slot in the psychologist's schedule
+    const scheduleDay =
+      appointmenttype === "online"
+        ? psychologist.onlineAppointment.schedule.find(
+            (schedule) => schedule.day === day
+          )
+        : psychologist.onsiteAppointment.schedule.find(
+            (schedule) => schedule.day === day
+          );
+
+    if (!scheduleDay) {
+      return res.status(400).send("Invalid day for appointment");
+    }
+
+    const appointmentSlot = scheduleDay.slots.find(
+      (slot) => slot.start === time
+    );
+
+    if (!appointmentSlot) {
+      return res.status(400).send("Invalid time for appointment");
+    }
+    if (!appointmentSlot.available) {
+      return res.status(400).send("slot already booked");
+    }
+
+    // Set the slot availability to false
+    appointmentSlot.available = false;
+
+    // Save the updated psychologist document
+    await psychologist.save();
 
     const appointment = new Appointment({
       patient_id,
@@ -56,7 +90,18 @@ router.get("/", async (req, res) => {
   try {
     const appointments = await Appointment.find()
       .populate("patient_id")
-      .populate("psychologist_id");
+      .populate({
+        path: "psychologist_id",
+        select: "-onlineAppointment -onsiteAppointment",
+        populate: {
+          path: "user_id",
+          select: "name email",
+        },
+      })
+      .populate({
+        path: "review_id",
+        match: { $expr: { $ne: ["$review_id", null] } },
+      });
     res.send(appointments);
   } catch (err) {
     console.error(err.message);
@@ -81,19 +126,82 @@ router.get("/", async (req, res) => {
 // update an existing appointment by ID
 router.put("/:id", async (req, res) => {
   try {
-    const updateObject = {};
-    for (const [key, value] of Object.entries(req.body)) {
-      updateObject[key] = value;
+    const appointment = await Appointment.findById(req.params.id);
+    if (!appointment) return res.status(404).send("Appointment not found");
+    const updateObject = req.body;
+    const { status } = updateObject;
+    if (
+      status !== undefined &&
+      (status === "completed" ||
+        status === "reschedule" ||
+        status === "canceled")
+    ) {
+      const psychologist = await Psychologist.findById(
+        appointment.psychologist_id
+      );
+      if (!psychologist) return res.status(404).send("Psychologist not found");
+
+      const { day: prevDay, time: prevTime } = appointment.datetime;
+
+      const prevScheduleDay =
+        appointment.appointmenttype === "online"
+          ? psychologist.onlineAppointment.schedule.find(
+              (schedule) => schedule.day === prevDay
+            )
+          : psychologist.onsiteAppointment.schedule.find(
+              (schedule) => schedule.day === prevDay
+            );
+
+      if (prevScheduleDay) {
+        const prevAppointmentSlot = prevScheduleDay.slots.find(
+          (slot) => slot.start === prevTime
+        );
+
+        if (prevAppointmentSlot) {
+          prevAppointmentSlot.available = true;
+        }
+      }
+      if (status === "reschedule") {
+        updateObject.reschedule_count = (appointment.reschedule_count || 0) + 1; // Increment reschedule_count
+
+        const { day: newDay, time: newTime } = updateObject.datetime;
+
+        const newScheduleDay =
+          appointment.appointmenttype === "online"
+            ? psychologist.onlineAppointment.schedule.find(
+                (schedule) => schedule.day === newDay
+              )
+            : psychologist.onsiteAppointment.schedule.find(
+                (schedule) => schedule.day === newDay
+              );
+
+        if (newScheduleDay) {
+          const newAppointmentSlot = newScheduleDay.slots.find(
+            (slot) => slot.start === newTime
+          );
+
+          if (newAppointmentSlot) {
+            if (!newAppointmentSlot.available) {
+              return res.status(400).send("Appointment slot is not available");
+            }
+
+            newAppointmentSlot.available = false;
+          }
+        }
+      }
+
+      await psychologist.save();
     }
-    // const appointment = await Appointment.findById(req.params.id);
-    const appointment = await Appointment.findByIdAndUpdate(
+
+    const updatedAppointment = await Appointment.findByIdAndUpdate(
       req.params.id,
       { $set: updateObject },
       { new: true }
     );
+
+    res.send(updatedAppointment);
     // .populate("patient_id")
     // .populate("psychologist_id", "-onlineAppointment", "-onsiteAppointment");
-    if (!appointment) return res.status(404).send("Appointment not found");
 
     // appointment.patient_id = req.body.patient_id;
     // appointment.psychologist_id = req.body.psychologist_id;
@@ -105,7 +213,6 @@ router.put("/:id", async (req, res) => {
 
     // await appointment.save();
 
-    res.send(appointment);
     // const appointment = await Appointment.findByIdAndUpdate(
     //   req.params.id,
     //   {
@@ -150,13 +257,19 @@ router.get("/psychologist/:psychologistId", async (req, res) => {
     if (!psychologist) return res.status(404).send("psychologistt not found");
     const appointments = await Appointment.find({
       psychologist_id: req.params.psychologistId,
-    }).populate({
-      path: "patient_id",
-      populate: {
-        path: "user_id",
-        select: "name email",
-      },
-    });
+    })
+      .populate({
+        path: "patient_id",
+        populate: {
+          path: "user_id",
+          select: "name email",
+        },
+      })
+      .populate({
+        path: "review_id",
+        match: { $expr: { $ne: ["$review_id", null] } },
+      });
+
     res.send(appointments);
   } catch (err) {
     console.error(err.message);
@@ -171,15 +284,19 @@ router.get("/patient/:patientId", async (req, res) => {
     if (!patient) return res.status(404).send("patient not found");
     const appointments = await Appointment.find({
       patient_id: req.params.patientId,
-    }).populate({
-      path: "psychologist_id",
-      select: "-onlineAppointment -onsiteAppointment",
-      populate: {
-        path: "user_id",
-        select: "name email",
-      },
-    });
-
+    })
+      .populate({
+        path: "psychologist_id",
+        select: "-onlineAppointment -onsiteAppointment",
+        populate: {
+          path: "user_id",
+          select: "name email",
+        },
+      })
+      .populate({
+        path: "review_id",
+        match: { $expr: { $ne: ["$review_id", null] } },
+      });
     res.send(appointments);
   } catch (err) {
     console.error(err.message);

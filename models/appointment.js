@@ -12,13 +12,18 @@ const appointmentSchema = mongoose.Schema({
     ref: "Psychologist",
     required: true,
   },
+  review_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Review",
+  },
   datetime: {
     time: { type: String, required: true },
     date: { type: String, required: true },
+    day: { type: String, required: true },
   },
   status: {
     type: String,
-    enum: ["upcoming", "completed", "cancelled"],
+    enum: ["upcoming", "completed", "cancelled", "reschedule"],
     default: "upcoming",
   },
   prescription: {
@@ -39,10 +44,7 @@ const appointmentSchema = mongoose.Schema({
     type: String,
     required: true,
   },
-  review_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Review",
-  },
+
   reviewed: {
     type: Boolean,
     default: false,

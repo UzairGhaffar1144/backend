@@ -22,8 +22,6 @@ const reviewSchema = mongoose.Schema({
   },
 });
 
-const Review = mongoose.model("Review", reviewSchema);
-
 function validateAppointment(data) {
   const schema = Joi.object({
     psychologist: Joi.string().required(),
@@ -35,5 +33,6 @@ function validateAppointment(data) {
   return schema.validate(data, { abortEarly: false });
 }
 
-module.exports.validate = validateAppointment;
+const Review = mongoose.model("Review", reviewSchema);
 module.exports.Review = Review;
+module.exports.validate = validateAppointment;
