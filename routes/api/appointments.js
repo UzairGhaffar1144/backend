@@ -161,6 +161,10 @@ router.put("/:id", async (req, res) => {
           prevAppointmentSlot.available = true;
         }
       }
+      if (status === "completed") {
+        psychologist.patientstreated = (psychologist.patientstreated || 0) + 1; // Increment patientstreated
+        await psychologist.save();
+      }
       if (status === "reschedule") {
         updateObject.reschedule_count = (appointment.reschedule_count || 0) + 1; // Increment reschedule_count
 

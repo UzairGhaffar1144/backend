@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { Appointment } = require("../../models/appointment");
 const { Review } = require("../../models/review");
+const { Psychologist } = require("../../models/psychologist");
 // Create a new review
 // POST /reviews
 // Add a new review for an appointment
@@ -12,7 +13,10 @@ router.post("/:id", async (req, res) => {
     // if (error) {
     //   return res.status(400).send({ message: error.details[0].message });
     // }
-
+    const rating = parseFloat(req.body.rating);
+    if (isNaN(rating)) {
+      return res.status(400).send({ message: "Invalid rating value" });
+    }
     // Check if appointment exists
     const appointment = await Appointment.findById(req.params.id);
     if (!appointment) {
@@ -23,7 +27,7 @@ router.post("/:id", async (req, res) => {
     const review = new Review({
       psychologist_id: appointment.psychologist_id,
       appointment_id: req.params.id,
-      rating: req.body.rating,
+      rating: rating,
       comment: req.body.comment,
     });
 
@@ -35,12 +39,27 @@ router.post("/:id", async (req, res) => {
     // Update appointment's reviewed field to true
     appointment.reviewed = true;
 
-    console.log("Review ID:", review._id);
-
     appointment.review_id = review._id;
-    console.log("Appointment Review ID:", appointment.review_id);
     await appointment.save();
 
+    const psychologist = await Psychologist.findById(
+      appointment.psychologist_id
+    );
+    if (psychologist) {
+      const totalratings = psychologist.totalratings || 0;
+      const currentRating = psychologist.rating || 0;
+
+      const newtotalratings = totalratings + 1;
+      let newRating = 0;
+      if (currentRating === 0) {
+        newRating = rating;
+      } else {
+        newRating = (currentRating * totalratings + rating) / newtotalratings;
+      }
+      psychologist.rating = newRating;
+      psychologist.totalratings = newtotalratings;
+      await psychologist.save();
+    }
     res.status(200).send({ message: "Review added successfully" });
   } catch (error) {
     console.error(error);

@@ -26,6 +26,14 @@ const psychologistSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  totalratings: {
+    type: Number,
+    default: 0,
+  },
+  patientstreated: {
+    type: Number,
+    default: 0,
+  },
   about: {
     type: String,
   },
