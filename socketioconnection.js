@@ -7,7 +7,7 @@ function socketConnection(server) {
   const io = socketio(server, {
     cors: {
       methods: ["GET", "POST"],
-      transports: ["websocket", "polling"],
+      transports: ["websocket"],
       credentials: true,
     },
     allowEIO3: true,
