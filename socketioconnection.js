@@ -61,13 +61,13 @@ function socketConnection(server) {
     users = users.filter((user) => user.socketId !== socketId);
   };
 
-  // const getUser = (userId) => {
-  //   return users.find((user) => user.userId === userId);
-  // };
-  const getUser = async (userId) => {
-    const usersocket = await UserSocket.findOne({ userId });
-    return usersocket;
+  const getUser = (userId) => {
+    return users.find((user) => user.userId === userId);
   };
+  // const getUser = async (userId) => {
+  //   const usersocket = await UserSocket.findOne({ userId });
+  //   return usersocket;
+  // };
 
   io.on("connection", (socket) => {
     //when ceonnect
