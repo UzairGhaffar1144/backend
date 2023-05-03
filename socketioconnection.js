@@ -42,16 +42,21 @@ function socketConnection(server) {
     if (socket) {
       // update existing socket
       socket.socketId = socketId;
-      await socket.save();
+      // await socket.save();
     } else {
       // create new socket
-      const newSocket = new UserSocket({ userId, socketId });
-      await newSocket.save();
-
+      socket = new UserSocket({ userId, socketId });
+      // await newSocket.save();
+      // users.push({ userId, socketId });
       // add new user to the users array
+    }
+    await socket.save();
+    const index = users.findIndex((user) => user.userId === userId);
+    if (index !== -1) {
+      users[index].socketId = socketId;
+    } else {
       users.push({ userId, socketId });
     }
-
     console.log(users);
 
     io.emit("getUsers", users);
@@ -76,13 +81,13 @@ function socketConnection(server) {
     //take userId and socketId from user
 
     socket.on("addUser", (userId) => {
-      const index = users.findIndex((obj) => obj.userId === userId);
+      // const index = users.findIndex((obj) => obj.userId === userId);
 
-      if (index !== -1) {
-        users[index].socketId = socket.id;
-      } else {
-        addUser(userId, socket.id);
-      }
+      // if (index !== -1) {
+      //   users[index].socketId = socket.id;
+      // } else {
+      addUser(userId, socket.id);
+      // }
 
       io.emit("getUsers", users);
     });
