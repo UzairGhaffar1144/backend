@@ -17,4 +17,11 @@
         "NODE_ENV": "production",
         "DATABASE_URL": "./config"
       } 
+      ,
+      
+        "rewrites": [
+          { "source": "/socket.io/(.*)", "destination": "/socket.io/$1" }
+        ]
+      
+      
 }
