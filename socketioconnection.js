@@ -188,6 +188,7 @@ function socketConnection(server) {
     });
   });
   // setTimeout(() => {
+  //   sendAppointmentNotifications();
   // }, 30000);
   setInterval(() => sendAppointmentNotifications(), 20 * 1000);
 
