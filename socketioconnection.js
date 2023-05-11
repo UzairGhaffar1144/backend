@@ -1,7 +1,14 @@
 const socketio = require("socket.io");
+const { Appointment } = require("./models/appointment");
+
+// const { Appointment } = require("./models/appointment");
+const Psychologist = require("./models/psychologist").Psychologist;
+const { setInterval } = require("timers");
 const Message = require("./models/message");
 const Chat = require("./models/chat");
-const UserSocket = require("./models/socket").Socket;
+const { UserSocket } = require("./models/socket");
+
+// Usage: Call the `sendAppointmentNotifications` function with the `io` parameter from your socket connection setup.
 
 function socketConnection(server) {
   const io = socketio(server, {
@@ -37,7 +44,7 @@ function socketConnection(server) {
   //     users.push({ userId, socketId });
   // };
   const addUser = async (userId, socketId) => {
-    const socket = await UserSocket.findOne({ userId });
+    let socket = await UserSocket.findOne({ userId });
 
     if (socket) {
       // update existing socket
@@ -61,13 +68,81 @@ function socketConnection(server) {
 
     io.emit("getUsers", users);
   };
+  const sendAppointmentNotifications = async () => {
+    try {
+      const currentTime = new Date();
+      const nextHour = new Date(currentTime.getTime() + 60 * 60 * 1000);
+      console.log(nextHour);
+      const appointments = await Appointment.find({
+        $and: [
+          { "datetime.date": { $eq: nextHour.toISOString().slice(0, 10) } },
+          {
+            "datetime.time": {
+              $gte: currentTime.toISOString().slice(11, 16),
+              $lt: nextHour.toISOString().slice(11, 16),
+            },
+          },
+        ],
+      });
+
+      const psychologistIds = appointments.map(
+        (appointment) => appointment.psychologist_id
+      );
+      console.log(psychologistIds);
+      console.log("hhh");
+      console.log(appointments);
+      // Fetch the psychologists using the extracted IDs
+      const psychologists = await Psychologist.find(
+        { _id: { $in: psychologistIds } },
+        "user_id"
+      );
+
+      console.log(psychologists);
+
+      console.log(appointments);
+
+      psychologists.forEach((psychologist) => {
+        const user = getUser(psychologist.user_id);
+        console.log("user is" + user);
+        if (!user) {
+          console.log(
+            "user socket does not exist user never connected user ID:",
+            psychologist.user_id
+          );
+        } else {
+          console.log("apppppppp");
+          console.log(appointments);
+          const appointment = appointments.find((appointment) => {
+            return (
+              appointment.psychologist_id.toString() ===
+              psychologist._id.toString()
+            );
+          });
+
+          console.log(appointment);
+          if (appointment) {
+            io.to(user.socketId).emit("appointmentNotification", {
+              appointmentId: appointment._id,
+            });
+            console.log("Sent notification for appointment:", appointment._id);
+          }
+        }
+      });
+    } catch (err) {
+      console.log("Error retrieving appointments:", err);
+    }
+  };
 
   const removeUser = (socketId) => {
     users = users.filter((user) => user.socketId !== socketId);
   };
 
   const getUser = (userId) => {
-    return users.find((user) => user.userId === userId);
+    console.log("this is from getuser");
+    console.log("userId:", userId);
+    const user = users.find((user) => user.userId == userId);
+    console.log(user);
+    return user;
   };
   // const getUser = async (userId) => {
   //   const usersocket = await UserSocket.findOne({ userId });
@@ -86,7 +161,10 @@ function socketConnection(server) {
       // if (index !== -1) {
       //   users[index].socketId = socket.id;
       // } else {
-      addUser(userId, socket.id);
+      console.log("user id is " + userId);
+      if (userId) {
+        addUser(userId, socket.id);
+      }
       // }
 
       io.emit("getUsers", users);
@@ -105,9 +183,15 @@ function socketConnection(server) {
     socket.on("disconnect", () => {
       console.log("a user disconnected!");
       // removeUser(socket.id);
+
       io.emit("getUsers", users);
     });
   });
+  // setTimeout(() => {
+  // }, 30000);
+  setInterval(() => sendAppointmentNotifications(), 20 * 1000);
+
+  // setInterval(() => sendAppointmentNotifications(), 60 * 60 * 1000);
 
   // io = socketio(server);
 

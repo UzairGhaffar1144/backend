@@ -3,6 +3,7 @@ const router = express.Router();
 const { Appointment } = require("../../models/appointment");
 const { Patient } = require("../../models/patient");
 const { Psychologist } = require("../../models/psychologist");
+const { Chat } = require("../../models/chat");
 
 const { Review } = require("../../models/review");
 
@@ -78,6 +79,22 @@ router.post("/", async (req, res) => {
     });
 
     await appointment.save();
+    ///creating new chat for every appointments
+    //make check of chat hwre chat should not exist of psychologist and patient
+    const existingChat = await Chat.findOne({
+      members: {
+        $all: [psychologist.user_id, patient.user_id],
+      },
+    });
+    if (existingChat) {
+      console.log("chatalredy exists");
+    } else {
+      const chat = new Chat({
+        members: [psychologist.user_id, patient.user_id],
+      });
+      await chat.save();
+      console.log("chatalredy created");
+    }
     res.send(appointment);
   } catch (err) {
     console.error(err.message);

@@ -3,7 +3,7 @@
 const mongoose = require("mongoose");
 const Joi = require("@hapi/joi");
 
-const socketSchema = new mongoose.Schema({
+const usersocketSchema = new mongoose.Schema({
   userId: {
     type: String,
   },
@@ -21,6 +21,6 @@ function validateSocket(data) {
 }
 
 module.exports.validate = validateSocket;
-const Socket = mongoose.model("Socket", socketSchema);
+const UserSocket = mongoose.model("UserSocket", usersocketSchema);
 
-module.exports.Socket = Socket;
+module.exports.UserSocket = UserSocket;
