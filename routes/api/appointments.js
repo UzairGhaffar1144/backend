@@ -86,6 +86,7 @@ router.post("/", async (req, res) => {
         $all: [psychologist.user_id, patient.user_id],
       },
     });
+
     if (existingChat) {
       console.log("chatalredy exists");
     } else {
