@@ -72,7 +72,17 @@ router.post("/login", async (req, res) => {
       "user_id",
       "-password"
     );
-    user = patient; // update user object with patient data
+    token = jwt.sign(
+      {
+        _id: user._id,
+        name: user.name,
+        role: user.role,
+        patient_id: patient._id,
+        email: user.email,
+      },
+      config.get("jwtPrivateKey")
+    );
+    user = patient;
   }
   const datatoReturn = { user: user, token: token };
   res.status(200).send(datatoReturn);
