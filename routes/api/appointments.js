@@ -92,6 +92,7 @@ router.post("/", async (req, res) => {
       const chat = new Chat({
         members: [psychologist.user_id, patient.user_id],
       });
+      console.log(chat);
       await chat.save();
       console.log("chatalredy created");
     }
