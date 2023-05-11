@@ -82,6 +82,7 @@ router.post("/login", async (req, res) => {
       },
       config.get("jwtPrivateKey")
     );
+
     user = patient;
   }
   const datatoReturn = { user: user, token: token };
