@@ -26,16 +26,18 @@ router.post("/register", async (req, res) => {
     { _id: user._id, name: user.name, role: user.role },
     config.get("jwtPrivateKey")
   );
-  if (user.role == "patient") {
-    const patient = new Patient({ user_id: user._id });
-    await patient.save();
-  }
+
   let datatoReturn = {
     name: user.name,
     email: user.email,
     token: token,
     role: user.role,
   };
+  if (user.role == "patient") {
+    const patient = new Patient({ user_id: user._id });
+    await patient.save();
+    datatoReturn.patient_id = patient._id;
+  }
   return res.send(datatoReturn);
 });
 
