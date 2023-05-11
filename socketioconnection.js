@@ -165,6 +165,7 @@ function socketConnection(server) {
       if (userId) {
         addUser(userId, socket.id);
       }
+
       // }
 
       io.emit("getUsers", users);
