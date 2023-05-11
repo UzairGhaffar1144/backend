@@ -90,7 +90,7 @@ router.post("/", async (req, res) => {
       console.log("chatalredy exists");
     } else {
       const chat = new Chat({
-        members: [psychologist.user_id, patient.user_id],
+        members: [psychologist.user_id.toString(), patient.user_id.toString()],
       });
       console.log(chat);
       await chat.save();
