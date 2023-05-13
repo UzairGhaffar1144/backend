@@ -149,6 +149,13 @@ router.put("/:id", async (req, res) => {
     if (!appointment) return res.status(404).send("Appointment not found");
     const updateObject = req.body;
     const { status } = updateObject;
+    const { records } = updateObject; // Extract the 'record' field from the request body
+
+    if (records) {
+      appointment.records.push(records); // Push the 'record' value to the 'records' array
+      delete updateObject.records;
+      await appointment.save(); // Remove the 'record' field from the 'updateObject'
+    }
     if (
       status !== undefined &&
       (status === "completed" ||
