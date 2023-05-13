@@ -6,6 +6,9 @@ const psychologistSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
   },
+  profilepic: {
+    type: String,
+  },
   degree: {
     type: String,
     required: true,
