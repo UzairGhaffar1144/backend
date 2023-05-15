@@ -18,6 +18,7 @@ var appointmentsRouter = require("./routes/api/appointments");
 var reviewsRouter = require("./routes/api/reviews");
 var chatsRouter = require("./routes/api/chats");
 var messagesRouter = require("./routes/api/messages");
+var notificationsRouter = require("./routes/api/notifications");
 
 process.env["NODE_CONFIG_DIR"] = path.join(path.resolve("./"), "config/");
 var config = require("config");
@@ -42,6 +43,7 @@ app.use("/api/reviews", reviewsRouter);
 app.use("/api/discussionforums", discussionforumsRouter);
 app.use("/api/chats", chatsRouter);
 app.use("/api/messages", messagesRouter);
+app.use("/api/notifications", notificationsRouter);
 
 app.use("/api/products", productsRouter);
 app.use("/api/movies", moviesRouter);

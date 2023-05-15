@@ -29,6 +29,7 @@ router.post("/:id", async (req, res) => {
       appointment_id: req.params.id,
       rating: rating,
       comment: req.body.comment,
+      patientname: req.body.patientname,
     });
 
     // Save new review

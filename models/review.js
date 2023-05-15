@@ -16,6 +16,10 @@ const reviewSchema = mongoose.Schema({
     type: Number,
     required: true,
   },
+  patientname: {
+    type: String,
+    required: true,
+  },
   comment: {
     type: String,
     required: true,

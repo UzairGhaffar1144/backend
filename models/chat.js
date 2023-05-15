@@ -7,6 +7,12 @@ const chatSchema = new mongoose.Schema(
     members: {
       type: Array,
     },
+    patientname: {
+      type: String,
+    },
+    psychologistname: {
+      type: String,
+    },
   },
   { timestamps: true }
 );

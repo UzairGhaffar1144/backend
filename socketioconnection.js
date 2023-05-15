@@ -2,7 +2,9 @@ const socketio = require("socket.io");
 const { Appointment } = require("./models/appointment");
 
 // const { Appointment } = require("./models/appointment");
-const Psychologist = require("./models/psychologist").Psychologist;
+const { Psychologist } = require("./models/psychologist");
+
+const { Patient } = require("./models/patient");
 const { setInterval } = require("timers");
 const Message = require("./models/message");
 const Chat = require("./models/chat");
@@ -92,8 +94,17 @@ function socketConnection(server) {
       console.log("hhh");
       console.log(appointments);
       // Fetch the psychologists using the extracted IDs
+      const patientIds = appointments.map(
+        (appointment) => appointment.patient_id
+      );
+
       const psychologists = await Psychologist.find(
         { _id: { $in: psychologistIds } },
+        "user_id"
+      );
+
+      const patients = await Patient.find(
+        { _id: { $in: patientIds } },
         "user_id"
       );
 
@@ -124,7 +135,33 @@ function socketConnection(server) {
             io.to(user.socketId).emit("appointmentNotification", {
               appointmentId: appointment._id,
             });
-            console.log("Sent notification for appointment:", appointment._id);
+            console.log(
+              "Sent tp psychologist notification for appointment:",
+              appointment._id
+            );
+          }
+        }
+      });
+      patients.forEach((patient) => {
+        const user = getUser(patient.user_id);
+        if (!user) {
+          console.log(
+            "User socket does not exist. User never connected. User ID:",
+            patient.user_id
+          );
+        } else {
+          const appointment = appointments.find((appointment) => {
+            return appointment.patient_id.toString() === patient._id.toString();
+          });
+
+          if (appointment) {
+            io.to(user.socketId).emit("appointmentNotification", {
+              appointmentId: appointment._id,
+            });
+            console.log(
+              "Sent to patietnt notification for appointment:",
+              appointment._id
+            );
           }
         }
       });
