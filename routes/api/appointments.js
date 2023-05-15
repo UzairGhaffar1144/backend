@@ -25,10 +25,12 @@ router.post("/", async (req, res) => {
       reschedule_count,
     } = req.body;
 
-    const patient = await Patient.findById(patient_id);
+    const patient = await Patient.findById(patient_id).populate("user_id");
     if (!patient) return res.status(404).send("Patient not found");
 
-    const psychologist = await Psychologist.findById(psychologist_id);
+    const psychologist = await Psychologist.findById(psychologist_id).populate(
+      "user_id"
+    );
     if (!psychologist) return res.status(404).send("Psychologist not found");
     const { day, time } = datetime;
 
@@ -83,19 +85,34 @@ router.post("/", async (req, res) => {
     //make check of chat hwre chat should not exist of psychologist and patient
     const existingChat = await Chat.findOne({
       members: {
-        $and: [psychologist.user_id, patient.user_id],
+        $all: [
+          psychologist.user_id._id.toString(),
+          patient.user_id._id.toString(),
+        ],
       },
     });
 
+    console.log(patient);
+    console.log(patient.user_id);
+    console.log(psychologist);
+    console.log(psychologist.user_id);
+    console.log(existingChat);
     if (existingChat) {
       console.log("chatalredy exists");
     } else {
       const chat = new Chat({
-        members: [psychologist.user_id.toString(), patient.user_id.toString()],
+        members: [
+          psychologist.user_id._id.toString(),
+          patient.user_id._id.toString(),
+        ],
+
+        patientname: patient.user_id.name,
+        psychologistname: psychologist.user_id.name,
       });
+
       console.log(chat);
       await chat.save();
-      console.log("chatalredy created");
+      console.log("newchat  created");
     }
     res.send(appointment);
   } catch (err) {
@@ -160,7 +177,7 @@ router.put("/:id", async (req, res) => {
       status !== undefined &&
       (status === "completed" ||
         status === "reschedule" ||
-        status === "canceled")
+        status === "cancelled")
     ) {
       const psychologist = await Psychologist.findById(
         appointment.psychologist_id
