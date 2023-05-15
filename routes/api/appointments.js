@@ -83,7 +83,7 @@ router.post("/", async (req, res) => {
     //make check of chat hwre chat should not exist of psychologist and patient
     const existingChat = await Chat.findOne({
       members: {
-        $all: [psychologist.user_id, patient.user_id],
+        $and: [psychologist.user_id, patient.user_id],
       },
     });
 
