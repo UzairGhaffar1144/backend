@@ -9,6 +9,10 @@ var userSchema = mongoose.Schema({
     type: String,
     default: "patient",
   },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 userSchema.methods.generateHashedPassword = async function () {
   let salt = await bcrypt.genSalt(10);

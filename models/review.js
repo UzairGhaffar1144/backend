@@ -24,6 +24,10 @@ const reviewSchema = mongoose.Schema({
     type: String,
     required: true,
   },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 function validateAppointment(data) {

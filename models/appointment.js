@@ -58,6 +58,10 @@ const appointmentSchema = mongoose.Schema({
     type: Number,
     default: 0,
   },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 const Appointment = mongoose.model("Appointment", appointmentSchema);

@@ -110,6 +110,10 @@ const psychologistSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 function validatePsychologist(data) {
   const schema = Joi.object({

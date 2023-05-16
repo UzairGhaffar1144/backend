@@ -4,7 +4,7 @@ const { Appointment } = require("../../models/appointment");
 const { Patient } = require("../../models/patient");
 const { Psychologist } = require("../../models/psychologist");
 const { Chat } = require("../../models/chat");
-
+const mongoose = require("mongoose");
 const { Review } = require("../../models/review");
 
 // POST a new appointment
@@ -349,6 +349,57 @@ router.get("/patient/:patientId", async (req, res) => {
   } catch (err) {
     console.error(err.message);
     res.status(500).send("Server error");
+  }
+});
+
+//get all notes for specific patient id
+router.get("/notes/:patientid/:psychologistid", async (req, res) => {
+  const patientId = req.params.patientid;
+  const psychologistId = req.params.psychologistid;
+
+  try {
+    const result = await Appointment.aggregate([
+      {
+        $match: {
+          psychologist_id: mongoose.Types.ObjectId(psychologistId),
+          patient_id: mongoose.Types.ObjectId(patientId),
+        },
+      },
+      {
+        $sort: {
+          "datetime.date": 1,
+        },
+      },
+      {
+        $group: {
+          _id: "$datetime.date",
+          appointments: {
+            $push: {
+              notes: "$notes",
+              prescription: "$prescription",
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          date: "$_id",
+          appointments: 1,
+        },
+      },
+    ]);
+
+    if (result.length === 0) {
+      return res
+        .status(404)
+        .json({ error: "No appointments found for the specified patient ID" });
+    }
+
+    res.json({ appointments: result });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 

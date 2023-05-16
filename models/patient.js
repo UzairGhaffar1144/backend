@@ -14,8 +14,9 @@ const patientSchema = mongoose.Schema({
     type: String,
     enum: ["Male", "Female", "Other"],
   },
-  occupation: {
-    type: String,
+  createdAt: {
+    type: Date,
+    default: Date.now,
   },
   contact_number: {
     type: String,
@@ -40,7 +41,6 @@ function validatePatient(data) {
     user_id: Joi.string().required(),
     age: Joi.number().required(),
     gender: Joi.string().valid("Male", "Female", "Other").required(),
-    occupation: Joi.string().allow(""),
     contact_number: Joi.string().min(11).max(11).required(),
     // records: Joi.array()
     //   .items(
