@@ -11,7 +11,7 @@ const Chat = require("./models/chat");
 const { UserSocket } = require("./models/socket");
 
 // Usage: Call the `sendAppointmentNotifications` function with the `io` parameter from your socket connection setup.
-//
+
 function socketConnection(server) {
   const io = socketio(server, {
     cors: {
