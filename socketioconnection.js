@@ -11,7 +11,7 @@ const Chat = require("./models/chat");
 const { UserSocket } = require("./models/socket");
 
 // Usage: Call the `sendAppointmentNotifications` function with the `io` parameter from your socket connection setup.
-//
+
 function socketConnection(server) {
   const io = socketio(server, {
     cors: {
@@ -73,6 +73,10 @@ function socketConnection(server) {
   const sendAppointmentNotifications = async () => {
     try {
       const currentTime = new Date();
+      currentTime.setHours(currentTime.getHours() + 4);
+
+      // Now you can use the updated currentTime as needed
+
       const nextHour = new Date(currentTime.getTime() + 60 * 60 * 1000);
       console.log(nextHour);
       const appointments = await Appointment.find({
@@ -86,7 +90,8 @@ function socketConnection(server) {
           },
         ],
       });
-
+      console.log(appointments);
+      console.log("appointmsnts");
       const psychologistIds = appointments.map(
         (appointment) => appointment.psychologist_id
       );

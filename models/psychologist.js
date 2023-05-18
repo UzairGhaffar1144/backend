@@ -13,6 +13,10 @@ const psychologistSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  degreepic: {
+    type: String,
+    required: true,
+  },
   contactnumber: {
     type: String,
     required: true,

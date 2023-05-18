@@ -7,6 +7,10 @@ const discussionforumSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
+  category: {
+    type: String,
+    required: true,
+  },
   title: {
     type: String,
     required: true,
@@ -14,10 +18,6 @@ const discussionforumSchema = new mongoose.Schema({
   description: {
     type: String,
     required: true,
-  },
-  created_at: {
-    type: Date,
-    default: Date.now,
   },
   comments: [
     {
@@ -37,6 +37,10 @@ const discussionforumSchema = new mongoose.Schema({
       },
     },
   ],
+  created_at: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 function validateDiscussionforum(data) {
