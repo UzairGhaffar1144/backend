@@ -24,6 +24,22 @@ router.get("/allpsycholocistwithpagination", async (req, res) => {
   let onsiteFeeFilter = req.query.onsiteFee
     ? { "onsiteAppointment.fee": { $lte: req.query.onsiteFee } }
     : {};
+  let specializationFilter = req.query.specialization
+    ? { specialization: { $regex: req.query.specialization, $options: "i" } }
+    : {};
+  let locationFilter = req.query.location
+    ? { "onsiteAppointment.city": req.query.location }
+    : {};
+
+  const filters = {
+    ...approvedFilter,
+    ...genderFilter,
+    ...onlineFeeFilter,
+    ...onsiteFeeFilter,
+    ...specializationFilter,
+    ...locationFilter,
+  };
+
   let sortOptions = {};
   if (req.query.sortBy) {
     if (req.query.sortBy == "patientsTreated") {
@@ -32,14 +48,10 @@ router.get("/allpsycholocistwithpagination", async (req, res) => {
       sortOptions["onlineAppointment.fee"] = 1;
     } else if (req.query.sortBy == "onsiteFee") {
       sortOptions["onsiteAppointment.fee"] = 1;
+    } else if (req.query.sortBy === "rating") {
+      sortOptions["rating"] = -1;
     }
   }
-  const filters = {
-    ...approvedFilter,
-    ...genderFilter,
-    ...onlineFeeFilter,
-    ...onsiteFeeFilter,
-  };
 
   const psychologists = await Psychologist.find(filters)
     .skip(skipRecords)
