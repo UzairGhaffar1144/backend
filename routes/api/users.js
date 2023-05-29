@@ -4,6 +4,7 @@ let router = express.Router();
 const { User } = require("../../models/user");
 const { Psychologist } = require("../../models/psychologist");
 const { Patient } = require("../../models/patient");
+const { Notification } = require("../../models/notification");
 
 var bcrypt = require("bcryptjs"); /// to hash passwords
 const _ = require("lodash"); ///// provides features to work with arrays like foreach map etc
@@ -85,7 +86,12 @@ router.post("/login", async (req, res) => {
 
     user = patient;
   }
-  const datatoReturn = { user: user, token: token };
+  // notifications = await Notification.findById({ user_id: user._id });
+  const datatoReturn = {
+    user: user,
+    token: token,
+    // notifications: notifications,
+  };
   res.status(200).send(datatoReturn);
 });
 module.exports = router;

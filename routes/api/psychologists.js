@@ -9,6 +9,45 @@ const admin = require("../../middlewares/admin");
 var { Psychologist } = require("../../models/psychologist");
 var { User } = require("../../models/user");
 
+router.get("/allpsycholocistwithpagination", async (req, res) => {
+  let page = Number(req.query.page ? req.query.page : 1);
+  let perPage = Number(req.query.perPage ? req.query.perPage : 10);
+  let skipRecords = perPage * (page - 1);
+
+  let approvedFilter = req.query.approved
+    ? { approved: req.query.approved }
+    : { approved: true };
+  let genderFilter = req.query.gender ? { gender: req.query.gender } : {};
+  let onlineFeeFilter = req.query.onlineFee
+    ? { "onlineAppointment.fee": { $lte: req.query.onlineFee } }
+    : {};
+  let onsiteFeeFilter = req.query.onsiteFee
+    ? { "onsiteAppointment.fee": { $lte: req.query.onsiteFee } }
+    : {};
+  let sortOptions = {};
+  if (req.query.sortBy) {
+    if (req.query.sortBy == "patientsTreated") {
+      sortOptions["patientstreated"] = -1;
+    } else if (req.query.sortBy == "onlineFee") {
+      sortOptions["onlineAppointment.fee"] = 1;
+    } else if (req.query.sortBy == "onsiteFee") {
+      sortOptions["onsiteAppointment.fee"] = 1;
+    }
+  }
+  const filters = {
+    ...approvedFilter,
+    ...genderFilter,
+    ...onlineFeeFilter,
+    ...onsiteFeeFilter,
+  };
+
+  const psychologists = await Psychologist.find(filters)
+    .skip(skipRecords)
+    .limit(perPage)
+    .populate("user_id", "-password")
+    .sort(sortOptions);
+  return res.send(psychologists);
+});
 // Get all psychologists
 router.get("/allpsychologists", async (req, res) => {
   try {

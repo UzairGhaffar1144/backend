@@ -7,7 +7,9 @@ const notificationSchema = new mongoose.Schema({
   psychologistId: {
     type: String,
   },
-  user_id: { type: String },
+  // user_id: {
+  //   type: String
+  //  },
   type: {
     type: String,
     required: true,

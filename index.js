@@ -8,9 +8,6 @@ var mongoose = require("mongoose");
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/api/users"); /////----------------1------------------
 
-var productsRouter = require("./routes/api/products");
-var moviesRouter = require("./routes/api/movies");
-var webseriesRouter = require("./routes/api/webseries");
 var patientsRouter = require("./routes/api/patients");
 var psychologistsRouter = require("./routes/api/psychologists");
 var discussionforumsRouter = require("./routes/api/discussionforums");
@@ -46,10 +43,6 @@ app.use("/api/chats", chatsRouter);
 app.use("/api/messages", messagesRouter);
 app.use("/api/notifications", notificationsRouter);
 app.use("/api/analytics", analyticsRouter);
-
-app.use("/api/products", productsRouter);
-app.use("/api/movies", moviesRouter);
-app.use("/api/webseries", webseriesRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
