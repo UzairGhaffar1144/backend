@@ -6,6 +6,8 @@ const { Psychologist } = require("../../models/psychologist");
 const { Chat } = require("../../models/chat");
 const mongoose = require("mongoose");
 const { Review } = require("../../models/review");
+const { Bill } = require("../../models/bill");
+const { Commissioncollected } = require("../../models/commissioncollected");
 
 // POST a new appointment
 router.post("/", async (req, res) => {
@@ -18,13 +20,12 @@ router.post("/", async (req, res) => {
       notes,
       prescription,
       location,
-      fee,
       appointmenttype,
       reviewed,
       review_id,
       reschedule_count,
     } = req.body;
-
+    let fee = null;
     const patient = await Patient.findById(patient_id).populate("user_id");
     if (!patient) return res.status(404).send("Patient not found");
 
@@ -43,6 +44,10 @@ router.post("/", async (req, res) => {
         : psychologist.onsiteAppointment.schedule.find(
             (schedule) => schedule.day === day
           );
+    fee =
+      appointmenttype === "online"
+        ? psychologist.onlineAppointment.fee
+        : psychologist.onsiteAppointment.fee;
 
     if (!scheduleDay) {
       return res.status(400).send("Invalid day for appointment");
@@ -114,6 +119,31 @@ router.post("/", async (req, res) => {
       await chat.save();
       console.log("newchat  created");
     }
+    const bill = new Bill({
+      psychologistId: psychologist_id,
+      appointmentId: appointment._id,
+      amount: fee * 0.9,
+      status: "pending",
+    });
+    await bill.save();
+    // const comission = new Commissioncollected({
+    //   ammountcollected: fee * 0.1,
+    // });
+    // await comission.save();
+    let commissioncollected = await Commissioncollected.findOne();
+    if (!commissioncollected) {
+      // If the document doesn't exist, create a new one
+      commissioncollected = new Commissioncollected({
+        ammountcollected: fee * 0.1,
+      });
+    } else {
+      // Increment the commissionCollected field by 10% of the fee
+      commissioncollected.ammountcollected += fee * 0.1;
+    }
+
+    // Save the updated commission collected document
+    await commissioncollected.save();
+
     res.send(appointment);
   } catch (err) {
     console.error(err.message);
@@ -287,6 +317,22 @@ router.put("/:id", async (req, res) => {
 router.delete("/:id", async (req, res) => {
   try {
     const appointment = await Appointment.findById(req.params.id);
+
+    const bill = await Bill.findOne({ appointmentId: req.params.id });
+
+    if (!bill) {
+      return res.status(404).send("Bill not found");
+    }
+
+    const deductionammount = (bill.amount * 10) / 90;
+    console.log(bill.amount);
+    console.log(deductionammount);
+    let commissioncollected = await Commissioncollected.findOne();
+
+    // decrement the commissionCollected field by 10% of the fee
+    commissioncollected.ammountcollected -= deductionammount;
+    await commissioncollected.save();
+    await bill.remove();
     if (!appointment) {
       return res.status(404).send("Appointment not found");
     }
