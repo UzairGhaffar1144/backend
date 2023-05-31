@@ -61,7 +61,8 @@ router.post("/payment-sheet", async (req, res) => {
     paymentIntent: paymentIntent.client_secret,
     ephemeralKey: ephemeralKey.secret,
     customer: customer.id,
-    publishableKey: "pk_test_TYooMQauvdEDq54NiTphI7jx",
+    publishableKey:
+      "pk_test_51NCMlbSJ8riiB3rkzazMC4m4hBcz5KLZipY6pBSc8QriB1hEgAM3Ostnmifpnip39FGwHfXdIWYL0egiyMNUxUTH00GvCR1K03",
   });
 });
 
