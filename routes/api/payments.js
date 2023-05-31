@@ -4,7 +4,9 @@ const { Psychologist } = require("../../models/psychologist");
 const { Appointment } = require("../../models/appointment");
 
 require("dotenv").config();
-const stripe = Stripe(process.env.STRIPE_KEY);
+const stripe = Stripe(
+  "sk_test_51NCMlbSJ8riiB3rk5VXTMvx6OqRTdi10Jm7ziGxdpZubmrUjRVS60i4PgPi16vLlK2mPHTw0PV5hLqX0HQSwddCU00L1IuqAcX"
+);
 const router = express.Router();
 
 router.post("/create-checkout-session", async (req, res) => {
