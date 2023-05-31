@@ -5,7 +5,7 @@ const { Appointment } = require("../../models/appointment");
 
 require("dotenv").config();
 const stripe = Stripe(
-  "pk_test_51NDqw8Af90alvTgyQZuwQihTNE452eyu22MWocwUWYwCqdfRkQTaOuoAeHEHYyFJlVSVhoj4TEjMDbJtHiwKj7kZ00xCXYEanc"
+  "sk_test_51NDqw8Af90alvTgyqdphXk0oTIAylAcAVL8VsW6xXtdpeZPBJneYYXyPmu9xX5uKudtzDGJzPAwIZpwEIbeyiq8U006sIlMiXC"
 );
 const router = express.Router();
 
