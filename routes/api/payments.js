@@ -5,7 +5,7 @@ const { Appointment } = require("../../models/appointment");
 
 require("dotenv").config();
 const stripe = Stripe(
-  "sk_test_51NCMlbSJ8riiB3rk5VXTMvx6OqRTdi10Jm7ziGxdpZubmrUjRVS60i4PgPi16vLlK2mPHTw0PV5hLqX0HQSwddCU00L1IuqAcX"
+  "pk_test_51NDqw8Af90alvTgyQZuwQihTNE452eyu22MWocwUWYwCqdfRkQTaOuoAeHEHYyFJlVSVhoj4TEjMDbJtHiwKj7kZ00xCXYEanc"
 );
 const router = express.Router();
 
@@ -64,7 +64,7 @@ router.post("/payment-sheet", async (req, res) => {
     ephemeralKey: ephemeralKey.secret,
     customer: customer.id,
     publishableKey:
-      "pk_test_51NCMlbSJ8riiB3rkzazMC4m4hBcz5KLZipY6pBSc8QriB1hEgAM3Ostnmifpnip39FGwHfXdIWYL0egiyMNUxUTH00GvCR1K03",
+      "pk_test_51NDqw8Af90alvTgyQZuwQihTNE452eyu22MWocwUWYwCqdfRkQTaOuoAeHEHYyFJlVSVhoj4TEjMDbJtHiwKj7kZ00xCXYEanc",
   });
 });
 
