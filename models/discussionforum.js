@@ -25,11 +25,9 @@ const discussionforumSchema = new mongoose.Schema({
         //user who commented
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
-        required: true,
       },
       content: {
         type: String,
-        required: true,
       },
       created_at: {
         type: Date,

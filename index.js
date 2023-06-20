@@ -18,6 +18,7 @@ var messagesRouter = require("./routes/api/messages");
 var notificationsRouter = require("./routes/api/notifications");
 var analyticsRouter = require("./routes/api/analytics");
 var paymentRouter = require("./routes/api/payments");
+// var Emailrouter = require("./routes/api/sendemail");
 
 process.env["NODE_CONFIG_DIR"] = path.join(path.resolve("./"), "config/");
 var config = require("config");
@@ -45,7 +46,7 @@ app.use("/api/messages", messagesRouter);
 app.use("/api/notifications", notificationsRouter);
 app.use("/api/analytics", analyticsRouter);
 app.use("/api/payments", paymentRouter);
-
+// app.use("/api/email", Emailrouter);
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
   next(createError(404));

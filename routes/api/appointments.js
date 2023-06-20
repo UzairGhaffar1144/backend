@@ -317,7 +317,9 @@ router.put("/:id", async (req, res) => {
 router.delete("/:id", async (req, res) => {
   try {
     const appointment = await Appointment.findById(req.params.id);
-
+    if (!appointment) {
+      return res.status(404).send("Appointment not found");
+    }
     const bill = await Bill.findOne({ appointmentId: req.params.id });
 
     if (!bill) {
@@ -333,8 +335,32 @@ router.delete("/:id", async (req, res) => {
     commissioncollected.ammountcollected -= deductionammount;
     await commissioncollected.save();
     await bill.remove();
-    if (!appointment) {
-      return res.status(404).send("Appointment not found");
+
+    const psychologist = await Psychologist.findById(
+      appointment.psychologist_id
+    );
+    if (!psychologist) return res.status(404).send("Psychologist not found");
+
+    const { day: prevDay, time: prevTime } = appointment.datetime;
+
+    const prevScheduleDay =
+      appointment.appointmenttype === "online"
+        ? psychologist.onlineAppointment.schedule.find(
+            (schedule) => schedule.day === prevDay
+          )
+        : psychologist.onsiteAppointment.schedule.find(
+            (schedule) => schedule.day === prevDay
+          );
+
+    if (prevScheduleDay) {
+      const prevAppointmentSlot = prevScheduleDay.slots.find(
+        (slot) => slot.start === prevTime
+      );
+
+      if (prevAppointmentSlot) {
+        prevAppointmentSlot.available = true;
+        await psychologist.save();
+      }
     }
     await appointment.remove();
     res.send(appointment);
