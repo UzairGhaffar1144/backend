@@ -35,7 +35,7 @@ function socketConnection(server) {
   // });
 
   let users = [];
-
+  const socketData = {};
   UserSocket.find({}, (err, sockets) => {
     if (err) {
       console.log(err);
@@ -53,29 +53,79 @@ function socketConnection(server) {
   //   !users.some((user) => user.userId === userId) &&
   //     users.push({ userId, socketId });
   // };
-  const addUser = async (userId, socketId, deviceToken) => {
-    let socket = await UserSocket.findOne({ userId });
+  const addDeviceToken = (userId, deviceToken) => {
+    if (!socketData[userId]) {
+      console.log("User not found:", userId);
+    } else {
+      socketData[userId].deviceToken = deviceToken;
+      console.log(socketData);
+    }
+    // UserSocket.findOne({ userId: userId }, (err, userSocket) => {
+    //   if (err) {
+    //     console.error("Error finding user socket:", err);
+    //     return;
+    //   }
+    //   if (userSocket) {
+    //     // user exist in usersocket
+    //     if (userSocket.deviceToken !== deviceToken) {
+    //       // Device token is updated
+    //       userSocket.deviceToken = deviceToken;
+    //       userSocket.save((err) => {
+    //         if (err) {
+    //           console.error("Error updating user socket:", err);
+    //           return;
+    //         }
+    //       });
+    //     } else {
+    //       // Device token is the same as previous
+    //       console.log("Device token is already up to date.");
+    //     }
+    //   } else {
+    //     // User does not exist in UserSocket model, create new entry
+    //     const newUserSocket = new UserSocket({
+    //       userId: userId,
+    //       deviceToken: deviceToken,
+    //     });
+    //     newUserSocket.save((err) => {
+    //       if (err) {
+    //         console.error("Error creating user socket:", err);
+    //         return;
+    //       }
+    //     });
+    //   }
+    // });
+  };
 
-    if (socket) {
-      // update existing socket
-      socket.socketId = socketId;
-      socket.deviceToken = deviceToken;
-      // await socket.save();
+  const addUser = /*async*/ (userId, socketId /*, deviceToken*/) => {
+    if (!socketData[userId]) {
+      socketData[userId] = { socketId: socketId };
+      console.log("User added:", userId);
     } else {
-      // create new socket
-      socket = new UserSocket({ userId, socketId, deviceToken });
-      // await newSocket.save();
-      // users.push({ userId, socketId });
-      // add new user to the users array
+      socketData[userId].socketId = socketId;
     }
-    await socket.save();
-    const index = users.findIndex((user) => user.userId === userId);
-    if (index !== -1) {
-      users[index].socketId = socketId;
-    } else {
-      users.push({ userId, socketId, deviceToken });
-    }
-    console.log(users);
+    console.log(socketData);
+    // let socket = await UserSocket.findOne({ userId });
+
+    // if (socket) {
+    //   // update existing socket
+    //   socket.socketId = socketId;
+    //   // socket.deviceToken = deviceToken;
+    //   // await socket.save();
+    // } else {
+    //   // create new socket
+    //   socket = new UserSocket({ userId, socketId /*, deviceToken */ });
+    //   // await newSocket.save();
+    //   // users.push({ userId, socketId });
+    //   // add new user to the users array
+    // }
+    // await socket.save();
+    // const index = users.findIndex((user) => user.userId === userId);
+    // if (index !== -1) {
+    //   users[index].socketId = socketId;
+    // } else {
+    //   users.push({ userId, socketId /*, deviceToken*/ });
+    // }
+    // console.log(users);
 
     io.emit("getUsers", users);
   };
@@ -135,7 +185,6 @@ function socketConnection(server) {
             psychologist.user_id
           );
         } else {
-          console.log("apppppppp");
           console.log(appointments);
           const appointment = appointments.find((appointment) => {
             return (
@@ -146,6 +195,11 @@ function socketConnection(server) {
 
           console.log(appointment);
           if (appointment) {
+            if (user.deviceToken) {
+              console.log("notification to device token");
+            } else {
+              console.log(" is not send notification to device token");
+            }
             io.to(user.socketId).emit("appointmentNotification", {
               appointmentId: appointment._id,
             });
@@ -169,6 +223,11 @@ function socketConnection(server) {
           });
 
           if (appointment) {
+            if (user.deviceToken) {
+              console.log("notification to device token");
+            } else {
+              console.log(" is not send notification to device token");
+            }
             io.to(user.socketId).emit("appointmentNotification", {
               appointmentId: appointment._id,
             });
@@ -197,7 +256,8 @@ function socketConnection(server) {
   const getUser = (userId) => {
     console.log("this is from getuser");
     console.log("userId:", userId);
-    const user = users.find((user) => user.userId == userId);
+    const user = socketData[userId];
+    // const user = users.find((user) => user.userId == userId);
     console.log(user);
     return user;
   };
@@ -212,7 +272,7 @@ function socketConnection(server) {
 
     //take userId and socketId from user
 
-    socket.on("addUser", (userId, deviceToken) => {
+    socket.on("addUser", (userId /*, deviceToken*/) => {
       // const index = users.findIndex((obj) => obj.userId === userId);
 
       // if (index !== -1) {
@@ -220,12 +280,21 @@ function socketConnection(server) {
       // } else {
       console.log("user id is " + userId);
       if (userId) {
-        addUser(userId, socket.id, deviceToken);
+        addUser(userId, socket.id /*, deviceToken*/);
       }
 
       // }
 
       io.emit("getUsers", users);
+    });
+    socket.on("addDevicetoken", (userId, deviceToken) => {
+      console.log("user id is " + userId);
+      if (userId) {
+        addDeviceToken(userId, deviceToken);
+      }
+      console.log(userId);
+      console.log(deviceToken);
+      console.log("add device token function ");
     });
 
     //send and get message
