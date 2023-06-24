@@ -60,40 +60,6 @@ function socketConnection(server) {
       socketData[userId].deviceToken = deviceToken;
       console.log(socketData);
     }
-    // UserSocket.findOne({ userId: userId }, (err, userSocket) => {
-    //   if (err) {
-    //     console.error("Error finding user socket:", err);
-    //     return;
-    //   }
-    //   if (userSocket) {
-    //     // user exist in usersocket
-    //     if (userSocket.deviceToken !== deviceToken) {
-    //       // Device token is updated
-    //       userSocket.deviceToken = deviceToken;
-    //       userSocket.save((err) => {
-    //         if (err) {
-    //           console.error("Error updating user socket:", err);
-    //           return;
-    //         }
-    //       });
-    //     } else {
-    //       // Device token is the same as previous
-    //       console.log("Device token is already up to date.");
-    //     }
-    //   } else {
-    //     // User does not exist in UserSocket model, create new entry
-    //     const newUserSocket = new UserSocket({
-    //       userId: userId,
-    //       deviceToken: deviceToken,
-    //     });
-    //     newUserSocket.save((err) => {
-    //       if (err) {
-    //         console.error("Error creating user socket:", err);
-    //         return;
-    //       }
-    //     });
-    //   }
-    // });
   };
 
   const addUser = /*async*/ (userId, socketId /*, deviceToken*/) => {
@@ -104,33 +70,17 @@ function socketConnection(server) {
       socketData[userId].socketId = socketId;
     }
     console.log(socketData);
-    // let socket = await UserSocket.findOne({ userId });
-
-    // if (socket) {
-    //   // update existing socket
-    //   socket.socketId = socketId;
-    //   // socket.deviceToken = deviceToken;
-    //   // await socket.save();
-    // } else {
-    //   // create new socket
-    //   socket = new UserSocket({ userId, socketId /*, deviceToken */ });
-    //   // await newSocket.save();
-    //   // users.push({ userId, socketId });
-    //   // add new user to the users array
-    // }
-    // await socket.save();
-    // const index = users.findIndex((user) => user.userId === userId);
-    // if (index !== -1) {
-    //   users[index].socketId = socketId;
-    // } else {
-    //   users.push({ userId, socketId /*, deviceToken*/ });
-    // }
-    // console.log(users);
 
     io.emit("getUsers", users);
   };
   const sendAppointmentNotifications = async () => {
     try {
+      const message = {
+        notification: {
+          title: "Appointment notification",
+          body: "Your appointment is coming today ",
+        },
+      };
       const currentTime = new Date();
       const nextHour = new Date(currentTime.getTime() + 60 * 60 * 1000);
       console.log(nextHour);
@@ -191,6 +141,7 @@ function socketConnection(server) {
           console.log(appointment);
           if (appointment) {
             if (user.deviceToken) {
+              admin.messaging().sendToDevice(user.deviceToken, message);
               console.log("notification to device token");
             } else {
               console.log(" is not send notification to device token");
@@ -219,6 +170,7 @@ function socketConnection(server) {
 
           if (appointment) {
             if (user.deviceToken) {
+              admin.messaging().sendToDevice(user.deviceToken, message);
               console.log("notification to device token");
             } else {
               console.log(" is not send notification to device token");
@@ -233,12 +185,6 @@ function socketConnection(server) {
           }
         }
       });
-      const message = {
-        notification: {
-          title: "Appointment notification",
-          body: "Your appointment is coming today ",
-        },
-      };
     } catch (err) {
       console.log("Error retrieving appointments:", err);
     }
