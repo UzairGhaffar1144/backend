@@ -1,4 +1,6 @@
 const socketio = require("socket.io");
+const admin = require("firebase-admin");
+const serviceAccount = require("./notifications-7e719-firebase-adminsdk-iqydz-0eb3cae08a.json");
 const { Appointment } = require("./models/appointment");
 
 // const { Appointment } = require("./models/appointment");
@@ -9,8 +11,13 @@ const { setInterval } = require("timers");
 const Message = require("./models/message");
 const Chat = require("./models/chat");
 const { UserSocket } = require("./models/socket");
+const { forEach } = require("lodash");
 
 // Usage: Call the `sendAppointmentNotifications` function with the `io` parameter from your socket connection setup.
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  // Other Firebase configurations if needed
+});
 
 function socketConnection(server) {
   const io = socketio(server, {
@@ -28,7 +35,7 @@ function socketConnection(server) {
   // });
 
   let users = [];
-
+  const socketData = {};
   UserSocket.find({}, (err, sockets) => {
     if (err) {
       console.log(err);
@@ -36,6 +43,7 @@ function socketConnection(server) {
       users = sockets.map((socket) => ({
         userId: socket.userId,
         socketId: socket.socketId,
+        deviceToken: socket.deviceToken,
       }));
       console.log(users);
     }
@@ -45,28 +53,79 @@ function socketConnection(server) {
   //   !users.some((user) => user.userId === userId) &&
   //     users.push({ userId, socketId });
   // };
-  const addUser = async (userId, socketId) => {
-    let socket = await UserSocket.findOne({ userId });
+  const addDeviceToken = (userId, deviceToken) => {
+    if (!socketData[userId]) {
+      console.log("User not found:", userId);
+    } else {
+      socketData[userId].deviceToken = deviceToken;
+      console.log(socketData);
+    }
+    // UserSocket.findOne({ userId: userId }, (err, userSocket) => {
+    //   if (err) {
+    //     console.error("Error finding user socket:", err);
+    //     return;
+    //   }
+    //   if (userSocket) {
+    //     // user exist in usersocket
+    //     if (userSocket.deviceToken !== deviceToken) {
+    //       // Device token is updated
+    //       userSocket.deviceToken = deviceToken;
+    //       userSocket.save((err) => {
+    //         if (err) {
+    //           console.error("Error updating user socket:", err);
+    //           return;
+    //         }
+    //       });
+    //     } else {
+    //       // Device token is the same as previous
+    //       console.log("Device token is already up to date.");
+    //     }
+    //   } else {
+    //     // User does not exist in UserSocket model, create new entry
+    //     const newUserSocket = new UserSocket({
+    //       userId: userId,
+    //       deviceToken: deviceToken,
+    //     });
+    //     newUserSocket.save((err) => {
+    //       if (err) {
+    //         console.error("Error creating user socket:", err);
+    //         return;
+    //       }
+    //     });
+    //   }
+    // });
+  };
 
-    if (socket) {
-      // update existing socket
-      socket.socketId = socketId;
-      // await socket.save();
+  const addUser = /*async*/ (userId, socketId /*, deviceToken*/) => {
+    if (!socketData[userId]) {
+      socketData[userId] = { socketId: socketId };
+      console.log("User added:", userId);
     } else {
-      // create new socket
-      socket = new UserSocket({ userId, socketId });
-      // await newSocket.save();
-      // users.push({ userId, socketId });
-      // add new user to the users array
+      socketData[userId].socketId = socketId;
     }
-    await socket.save();
-    const index = users.findIndex((user) => user.userId === userId);
-    if (index !== -1) {
-      users[index].socketId = socketId;
-    } else {
-      users.push({ userId, socketId });
-    }
-    console.log(users);
+    console.log(socketData);
+    // let socket = await UserSocket.findOne({ userId });
+
+    // if (socket) {
+    //   // update existing socket
+    //   socket.socketId = socketId;
+    //   // socket.deviceToken = deviceToken;
+    //   // await socket.save();
+    // } else {
+    //   // create new socket
+    //   socket = new UserSocket({ userId, socketId /*, deviceToken */ });
+    //   // await newSocket.save();
+    //   // users.push({ userId, socketId });
+    //   // add new user to the users array
+    // }
+    // await socket.save();
+    // const index = users.findIndex((user) => user.userId === userId);
+    // if (index !== -1) {
+    //   users[index].socketId = socketId;
+    // } else {
+    //   users.push({ userId, socketId /*, deviceToken*/ });
+    // }
+    // console.log(users);
 
     io.emit("getUsers", users);
   };
@@ -121,7 +180,6 @@ function socketConnection(server) {
             psychologist.user_id
           );
         } else {
-          console.log("apppppppp");
           console.log(appointments);
           const appointment = appointments.find((appointment) => {
             return (
@@ -132,6 +190,11 @@ function socketConnection(server) {
 
           console.log(appointment);
           if (appointment) {
+            if (user.deviceToken) {
+              console.log("notification to device token");
+            } else {
+              console.log(" is not send notification to device token");
+            }
             io.to(user.socketId).emit("appointmentNotification", {
               appointmentId: appointment._id,
             });
@@ -155,6 +218,11 @@ function socketConnection(server) {
           });
 
           if (appointment) {
+            if (user.deviceToken) {
+              console.log("notification to device token");
+            } else {
+              console.log(" is not send notification to device token");
+            }
             io.to(user.socketId).emit("appointmentNotification", {
               appointmentId: appointment._id,
             });
@@ -165,6 +233,12 @@ function socketConnection(server) {
           }
         }
       });
+      const message = {
+        notification: {
+          title: "Appointment notification",
+          body: "Your appointment is coming today ",
+        },
+      };
     } catch (err) {
       console.log("Error retrieving appointments:", err);
     }
@@ -177,7 +251,8 @@ function socketConnection(server) {
   const getUser = (userId) => {
     console.log("this is from getuser");
     console.log("userId:", userId);
-    const user = users.find((user) => user.userId == userId);
+    const user = socketData[userId];
+    // const user = users.find((user) => user.userId == userId);
     console.log(user);
     return user;
   };
@@ -192,7 +267,7 @@ function socketConnection(server) {
 
     //take userId and socketId from user
 
-    socket.on("addUser", (userId) => {
+    socket.on("addUser", (userId /*, deviceToken*/) => {
       // const index = users.findIndex((obj) => obj.userId === userId);
 
       // if (index !== -1) {
@@ -200,12 +275,21 @@ function socketConnection(server) {
       // } else {
       console.log("user id is " + userId);
       if (userId) {
-        addUser(userId, socket.id);
+        addUser(userId, socket.id /*, deviceToken*/);
       }
 
       // }
 
       io.emit("getUsers", users);
+    });
+    socket.on("addDevicetoken", (userId, deviceToken) => {
+      console.log("user id is " + userId);
+      if (userId) {
+        addDeviceToken(userId, deviceToken);
+      }
+      console.log(userId);
+      console.log(deviceToken);
+      console.log("add device token function ");
     });
 
     //send and get message
@@ -216,6 +300,22 @@ function socketConnection(server) {
         senderId,
         text,
       });
+    });
+
+    // notification event for backend which will send to socket and save new notification
+    socket.on("sendNotification", async ({ user_id, type, message }) => {
+      const user = getUser(user_id);
+      io.to(user.socketId).emit("getNotification", {
+        type,
+        message,
+      });
+      const newNotification = new Notification({
+        user_id: user_id,
+        type: type,
+        message: message,
+      });
+
+      await newNotification.save();
     });
 
     //when disconnect
@@ -230,68 +330,6 @@ function socketConnection(server) {
   //   sendAppointmentNotifications();
   // }, 30000);
   setInterval(() => sendAppointmentNotifications(), 20 * 1000);
-
-  // setInterval(() => sendAppointmentNotifications(), 60 * 60 * 1000);
-
-  // io = socketio(server);
-
-  // io.on("connection", (socket) => {
-  //   console.log(`User connected: ${socket.id}`);
-
-  //   // Join room on user login
-  //   socket.on("login", (userId) => {
-  //     console.log(`User ${userId} logged in`);
-  //     socket.join(userId);
-  //   });
-
-  //   // Send message and save to database
-  //   // Send message and save to database
-  //   socket.on("sendMessage", async ({ senderId, recipientId, content }) => {
-  //     try {
-  //       // Check if chat already exists, if not create one
-  //       let chatId;
-  //       const existingChat = await Chat.findOne({
-  //         participants: { $all: [senderId, recipientId] },
-  //       });
-  //       if (existingChat) {
-  //         chatId = existingChat._id;
-  //       } else {
-  //         const newChat = new Chat({
-  //           participants: [senderId, recipientId],
-  //         });
-  //         const savedChat = await newChat.save();
-  //         chatId = savedChat._id;
-  //       }
-
-  //       // Create message and save to database
-  //       const message = new Message({
-  //         sender: senderId,
-  //         recipient: recipientId,
-  //         content,
-  //         timestamp: Date.now(),
-  //       });
-  //       const savedMessage = await message.save();
-
-  //       // Add saved message ID to relevant chat document
-  //       await Chat.findByIdAndUpdate(chatId, {
-  //         $push: { messages: savedMessage._id },
-  //         //   lastMessage: savedMessage.content,
-  //         //   lastMessageAt: savedMessage.timestamp,
-  //       });
-
-  //       // Emit message to sender and recipient
-  //       io.to(senderId).emit("newMessage", savedMessage);
-  //       io.to(recipientId).emit("newMessage", savedMessage);
-  //     } catch (err) {
-  //       console.error(err);
-  //     }
-  //   });
-
-  //   // Disconnect user
-  //   socket.on("disconnect", () => {
-  //     console.log(`User disconnected: ${socket.id}`);
-  //   });
-  // });
 }
 
 module.exports = socketConnection;

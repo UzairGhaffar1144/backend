@@ -8,9 +8,6 @@ var mongoose = require("mongoose");
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/api/users"); /////----------------1------------------
 
-var productsRouter = require("./routes/api/products");
-var moviesRouter = require("./routes/api/movies");
-var webseriesRouter = require("./routes/api/webseries");
 var patientsRouter = require("./routes/api/patients");
 var psychologistsRouter = require("./routes/api/psychologists");
 var discussionforumsRouter = require("./routes/api/discussionforums");
@@ -20,6 +17,8 @@ var chatsRouter = require("./routes/api/chats");
 var messagesRouter = require("./routes/api/messages");
 var notificationsRouter = require("./routes/api/notifications");
 var analyticsRouter = require("./routes/api/analytics");
+var paymentRouter = require("./routes/api/payments");
+// var Emailrouter = require("./routes/api/sendemail");
 
 process.env["NODE_CONFIG_DIR"] = path.join(path.resolve("./"), "config/");
 var config = require("config");
@@ -46,11 +45,8 @@ app.use("/api/chats", chatsRouter);
 app.use("/api/messages", messagesRouter);
 app.use("/api/notifications", notificationsRouter);
 app.use("/api/analytics", analyticsRouter);
-
-app.use("/api/products", productsRouter);
-app.use("/api/movies", moviesRouter);
-app.use("/api/webseries", webseriesRouter);
-
+app.use("/api/payments", paymentRouter);
+// app.use("/api/email", Emailrouter);
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
   next(createError(404));

@@ -10,6 +10,9 @@ const usersocketSchema = new mongoose.Schema({
   socketId: {
     type: String,
   },
+  deviceToken: {
+    type: String,
+  },
 });
 
 function validateSocket(data) {

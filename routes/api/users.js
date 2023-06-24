@@ -4,6 +4,11 @@ let router = express.Router();
 const { User } = require("../../models/user");
 const { Psychologist } = require("../../models/psychologist");
 const { Patient } = require("../../models/patient");
+const { Notification } = require("../../models/notification");
+const Token = require("../../models/token");
+const sendEmail = require("./sendemail");
+
+const crypto = require("crypto");
 
 var bcrypt = require("bcryptjs"); /// to hash passwords
 const _ = require("lodash"); ///// provides features to work with arrays like foreach map etc
@@ -22,6 +27,13 @@ router.post("/register", async (req, res) => {
   user.role = req.body.role;
   await user.generateHashedPassword();
   await user.save();
+
+  const verificationtoken = await new Token({
+    userId: user._id,
+    token: crypto.randomBytes(32).toString("hex"),
+  }).save();
+  const url = `http://localhost:4000/api/users/${user.id}/verify/${verificationtoken.token}`;
+  await sendEmail(user.email, "Verify Email", url);
   let token = jwt.sign(
     { _id: user._id, name: user.name, role: user.role },
     config.get("jwtPrivateKey")
@@ -51,16 +63,43 @@ router.get("/:id", async (req, res) => {
     return res.status(400).send("Invalid ID"); // format of id is not correct
   }
 });
+router.get("/:id/verify/:token/", async (req, res) => {
+  try {
+    const user = await User.findOne({ _id: req.params.id });
+    if (!user) return res.status(400).send({ message: "Invalid link" });
+    console.log(user);
+    const token = await Token.findOne({
+      userId: user._id,
+      token: req.params.token,
+    });
+    console.log(token);
+    if (!token) return res.status(400).send({ message: "Invalid link" });
+
+    user.verified = true;
+    await user.save();
+    await token.remove();
+
+    res.status(200).send({ message: "Email verified successfully" });
+  } catch (error) {
+    res.status(500).send({ message: "Internal Server Error" });
+  }
+});
+
 router.post("/login", async (req, res) => {
   let user = await User.findOne({ email: req.body.email });
   if (!user) return res.status(400).send("User Not Registered");
   let isValid = await bcrypt.compare(req.body.password, user.password);
   if (!isValid) return res.status(401).send("Invalid Password");
+  const notifications = await Notification.find({ user_id: user._id });
+  console.log(notifications);
   user.password = undefined;
   let token = jwt.sign(
     { _id: user._id, name: user.name, role: user.role },
     config.get("jwtPrivateKey")
   );
+  // if (user.verified == false) {
+  //   return res.status(400).send("please verify account first from yur email ");
+  // }
 
   if (user.role == "psychologist") {
     let psychologist = await Psychologist.findOne({
@@ -85,7 +124,12 @@ router.post("/login", async (req, res) => {
 
     user = patient;
   }
-  const datatoReturn = { user: user, token: token };
+
+  const datatoReturn = {
+    user: user,
+    token: token,
+    notifications: notifications,
+  };
   res.status(200).send(datatoReturn);
 });
 module.exports = router;
