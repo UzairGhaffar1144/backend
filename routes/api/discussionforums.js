@@ -7,6 +7,7 @@ const ObjectId = mongoose.Types.ObjectId;
 const validateDiscussionforum = require("../../middlewares/validateDiscussionforum");
 const auth = require("../../middlewares/auth");
 const admin = require("../../middlewares/admin");
+const { filter } = require("lodash");
 
 // POST a new discussion forum topic
 router.post("/", async (req, res) => {
@@ -27,10 +28,28 @@ router.post("/", async (req, res) => {
   }
 });
 
-// GET all discussion forum topics
+// GET all discussion forum topics by pagination and category filter
 router.get("/", async (req, res) => {
   try {
-    const discussionforums = await Discussionforum.find().populate("user_id");
+    let page = Number(req.query.page ? req.query.page : 1);
+    let perPage = Number(req.query.perPage ? req.query.perPage : 3);
+    let skipRecords = perPage * (page - 1);
+
+    const categoryFilter = req.query.category
+      ? { category: req.query.category }
+      : {};
+    const filters = {
+      ...categoryFilter,
+    };
+
+    const discussionforums = await Discussionforum.find(filters)
+      .skip(skipRecords)
+      .limit(perPage)
+      .populate("user_id", "-password")
+      .populate({
+        path: "comments.user_id",
+        select: "-_id name",
+      });
     res.send(discussionforums);
   } catch (error) {
     console.error(error);
@@ -38,7 +57,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// GET a specific discussion forum topic by ID
+// GET a specific discussion forum by ID
 router.get("/:id", async (req, res) => {
   try {
     const discussionforum = await Discussionforum.findById(
@@ -54,8 +73,35 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// POST a comment to a discussion forum topic
+// user update discussion forum
 router.put("/:id", async (req, res) => {
+  try {
+    const { title, description, category } = req.body;
+    const updateObject = {};
+    for (const [key, value] of Object.entries(req.body)) {
+      updateObject[key] = value;
+    }
+    const updatedDiscussionforum = await Discussionforum.findByIdAndUpdate(
+      req.params.id,
+      {
+        $set: updateObject,
+      },
+      { new: true }
+    );
+
+    if (!updatedDiscussionforum) {
+      return res.status(404).json({ msg: "Discussion forum not found" });
+    }
+
+    res.json(updatedDiscussionforum);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Server Error");
+  }
+});
+
+// POST a comment to a discussion forum topic
+router.put("/comment/:id", async (req, res) => {
   try {
     const { user_id, content } = req.body;
     const { id } = req.params;
