@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const jwt = require("jsonwebtoken"); /// token to verify genereated token
-
+const { Bill } = require("../../models/bill");
 const config = require("config");
 const validatePsychologist = require("../../middlewares/validatePsychologist");
 const auth = require("../../middlewares/auth");
@@ -9,6 +9,7 @@ const admin = require("../../middlewares/admin");
 var { Psychologist } = require("../../models/psychologist");
 var { User } = require("../../models/user");
 
+const mongoose = require("mongoose");
 router.get("/allpsycholocistwithpagination", async (req, res) => {
   let page = Number(req.query.page ? req.query.page : 1);
   let perPage = Number(req.query.perPage ? req.query.perPage : 10);
@@ -169,6 +170,45 @@ router.put("/:id", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).send("Internal Server Error");
+  }
+});
+
+router.get("/bill/:psychologistId", async (req, res) => {
+  const { psychologistId } = req.params;
+
+  try {
+    const aggregationPipeline = [
+      {
+        $match: {
+          psychologistId: mongoose.Types.ObjectId(psychologistId),
+        },
+      },
+      {
+        $group: {
+          _id: "$status",
+          totalAmount: { $sum: "$amount" },
+        },
+      },
+    ];
+    console.log("pipe");
+    const result = await Bill.aggregate(aggregationPipeline);
+    console.log("pipe ended");
+    const response = {
+      pendingBalance: 0,
+      withdrawableBalance: 0,
+    };
+
+    for (const item of result) {
+      if (item._id === "pending") {
+        response.pendingBalance = item.totalAmount;
+      } else if (item._id === "withdrawable") {
+        response.withdrawableBalance = item.totalAmount;
+      }
+    }
+
+    res.status(200).json(response);
+  } catch (error) {
+    res.status(500).json({ message: "Internal Server Error" });
   }
 });
 

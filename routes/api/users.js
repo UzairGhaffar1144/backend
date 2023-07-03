@@ -32,7 +32,7 @@ router.post("/register", async (req, res) => {
     userId: user._id,
     token: crypto.randomBytes(32).toString("hex"),
   }).save();
-  const url = `http://localhost:4000/api/users/${user.id}/verify/${verificationtoken.token}`;
+  const url = `http://localhost:3000/users/${user.id}/verify/${verificationtoken.token}`;
   await sendEmail(user.email, "Verify Email", url);
   let token = jwt.sign(
     { _id: user._id, name: user.name, role: user.role },
@@ -66,23 +66,54 @@ router.get("/:id", async (req, res) => {
 router.get("/:id/verify/:token/", async (req, res) => {
   try {
     const user = await User.findOne({ _id: req.params.id });
-    if (!user) return res.status(400).send({ message: "Invalid link" });
+    if (!user) return res.status(200).send({ message: "Verification Failed" });
     console.log(user);
     const token = await Token.findOne({
       userId: user._id,
       token: req.params.token,
     });
     console.log(token);
-    if (!token) return res.status(400).send({ message: "Invalid link" });
+    if (!token) return res.status(200).send({ message: "Verification Failed" });
 
     user.verified = true;
     await user.save();
     await token.remove();
 
-    res.status(200).send({ message: "Email verified successfully" });
+    res.status(200).send({ message: "Verification Successful" });
   } catch (error) {
     res.status(500).send({ message: "Internal Server Error" });
   }
+});
+
+router.post("/passwordresetlink", async (req, res) => {
+  let user = await User.findOne({ email: req.body.email });
+  if (!user) return res.status(400).send("Email address incorrect");
+  const verificationtoken = await new Token({
+    userId: user._id,
+    token: crypto.randomBytes(32).toString("hex"),
+  }).save();
+  const url = `http://localhost:3000/users/reset-password/${user.id}/${verificationtoken.token}`;
+  await sendEmail(user.email, "Password Reset link", url);
+  res.status(200).send("link sent to email");
+});
+
+router.post("/reset-password/:id/:token", async (req, res) => {
+  const { newPassword } = req.body;
+  const user = await User.findOne({ _id: req.params.id });
+  if (!user) return res.status(400).send({ message: "Invalid link" });
+  console.log(user);
+  const token = await Token.findOne({
+    userId: user._id,
+    token: req.params.token,
+  });
+  console.log(token);
+  if (!token) return res.status(400).send({ message: "Invalid link" });
+
+  user.password = newPassword;
+  await user.generateHashedPassword();
+  await user.save();
+  await token.remove();
+  return res.status(200).send("Password reset successful");
 });
 
 router.post("/login", async (req, res) => {
@@ -97,9 +128,9 @@ router.post("/login", async (req, res) => {
     { _id: user._id, name: user.name, role: user.role },
     config.get("jwtPrivateKey")
   );
-  // if (user.verified == false) {
-  //   return res.status(400).send("please verify account first from yur email ");
-  // }
+  if (user.verified == false) {
+    return res.status(400).send("please verify account first from yur email ");
+  }
 
   if (user.role == "psychologist") {
     let psychologist = await Psychologist.findOne({
@@ -130,6 +161,14 @@ router.post("/login", async (req, res) => {
     token: token,
     notifications: notifications,
   };
+  console.log(datatoReturn.notifications);
   res.status(200).send(datatoReturn);
+});
+
+router.delete("/", async (req, res) => {
+  const email = req.body.email;
+  await User.findOneAndDelete({ email: email });
+
+  res.send("deleted");
 });
 module.exports = router;

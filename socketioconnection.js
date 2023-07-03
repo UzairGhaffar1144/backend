@@ -75,9 +75,12 @@ function socketConnection(server) {
   };
   const sendAppointmentNotifications = async () => {
     try {
-      
-      const currentTime = new Date();
+      const currentTimet = new Date();
+      const currentTime = new Date(currentTimet.getTime() + 5 * 60 * 60 * 1000);
       const nextHour = new Date(currentTime.getTime() + 60 * 60 * 1000);
+      console.log(currentTimet);
+      console.log(currentTime);
+      // const nextHour = new Date(currentTime.getTime() + 60 * 60 * 1000);
       console.log(nextHour);
       const appointments = await Appointment.find({
         $and: [
@@ -140,7 +143,7 @@ function socketConnection(server) {
               body: "your appointment  is pending today",
             },
             data: {
-              appointmentId: appointment._id.toString()
+              appointmentId: appointment._id.toString(),
             },
           };
           if (appointment) {
@@ -177,13 +180,12 @@ function socketConnection(server) {
               body: "your appointment  is pending today",
             },
             data: {
-              appointmentId: appointment._id.toString()
+              appointmentId: appointment._id.toString(),
             },
           };
           if (appointment) {
             if (user.deviceToken) {
-              
-              message.notification.data=appointment._id.toString();
+              message.notification.data = appointment._id.toString();
               admin.messaging().sendToDevice(user.deviceToken, message);
               console.log("notification to device token");
             } else {
