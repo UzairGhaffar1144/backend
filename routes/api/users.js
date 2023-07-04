@@ -13,10 +13,22 @@ const crypto = require("crypto");
 var bcrypt = require("bcryptjs"); /// to hash passwords
 const _ = require("lodash"); ///// provides features to work with arrays like foreach map etc
 const jwt = require("jsonwebtoken"); /// token to verify genereated token
-
+const session = require("express-session");
 const config = require("config");
 const admin = require("../../middlewares/admin");
 
+router.use(
+  session({
+    secret: "your-secret-key", // Change this to a secure secret key
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: false, // Set this to true if using HTTPS
+      httpOnly: true,
+      maxAge: 3600000, // Session expires in 1 hour
+    },
+  })
+);
 router.post("/register", async (req, res) => {
   let user = await User.findOne({ email: req.body.email });
   if (user) return res.status(400).send("User with given Email already exist");
@@ -182,4 +194,78 @@ router.delete("/", async (req, res) => {
 
   res.send("deleted");
 });
+
+router.post("/mreset-password", async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    // Find the user based on the email
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).send("Email address incorrect");
+    }
+
+    // Generate OTP token
+    const token = crypto.randomInt(1000, 9999).toString();
+    // Save the token in the session
+    req.session.resetToken = token;
+    req.session.userId = user._id;
+
+    // Send password reset email
+    await sendEmail(user.email, "Password Reset otp", token);
+
+    res.status(200).send("Password reset email sent");
+  } catch (error) {
+    console.error("Error sending password reset email:", error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
+// Verify OTP token
+router.post("/mverify-otp", (req, res) => {
+  const { otpToken } = req.body;
+
+  try {
+    // Check if the OTP token matches the one stored in the session
+    if (req.session.resetToken !== otpToken) {
+      return res.status(400).send("Invalid token");
+    }
+
+    // Token verification successful
+    res.status(200).send("Token verified successfully");
+  } catch (error) {
+    console.error("Error verifying token:", error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
+// Update password
+router.post("/mupdate-password", async (req, res) => {
+  const { newPassword } = req.body;
+
+  try {
+    // Find the user based on the user ID stored in the session
+    const user = await User.findById(req.session.userId);
+    if (!user) {
+      return res.status(400).send("User not found");
+    }
+
+    // Update the user's password
+    user.password = newPassword;
+    console.log(user.password);
+    console.log(newPassword);
+    await user.generateHashedPassword();
+    await user.save();
+
+    // Clear the session
+    req.session.resetToken = null;
+    req.session.userId = null;
+
+    res.status(200).send("Password updated successfully");
+  } catch (error) {
+    console.error("Error updating password:", error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
 module.exports = router;
