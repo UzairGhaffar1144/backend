@@ -88,13 +88,24 @@ router.get("/:id/verify/:token/", async (req, res) => {
 router.post("/passwordresetlink", async (req, res) => {
   let user = await User.findOne({ email: req.body.email });
   if (!user) return res.status(400).send("Email address incorrect");
-  const verificationtoken = await new Token({
-    userId: user._id,
-    token: crypto.randomBytes(32).toString("hex"),
-  }).save();
-  const url = `http://localhost:3000/users/reset-password/${user.id}/${verificationtoken.token}`;
+
+  let token = await Token.findOne({ userId: user._id });
+
+  if (!token) {
+    // Create a new token if it doesn't exist
+    token = await new Token({
+      userId: user._id,
+      token: crypto.randomBytes(32).toString("hex"),
+    }).save();
+  } else {
+    // Update the existing token
+    token.token = crypto.randomBytes(32).toString("hex");
+    await token.save();
+  }
+
+  const url = `http://localhost:3000/users/reset-password/${user._id}/${token.token}`;
   await sendEmail(user.email, "Password Reset link", url);
-  res.status(200).send("link sent to email");
+  res.status(200).send("Link sent to email");
 });
 
 router.post("/reset-password/:id/:token", async (req, res) => {
@@ -128,9 +139,9 @@ router.post("/login", async (req, res) => {
     { _id: user._id, name: user.name, role: user.role },
     config.get("jwtPrivateKey")
   );
-  if (user.verified == false) {
-    return res.status(400).send("please verify account first from yur email ");
-  }
+  // if (user.verified == false) {
+  //   return res.status(400).send("please verify account first from yur email ");
+  // }
 
   if (user.role == "psychologist") {
     let psychologist = await Psychologist.findOne({
