@@ -275,16 +275,7 @@ router.put("/:id", async (req, res) => {
       req.params.id,
       { $set: updateObject },
       { new: true }
-    )
-      .populate("patient_id")
-      .populate({
-        path: "psychologist_id",
-        select: "-onlineAppointment -onsiteAppointment",
-        populate: {
-          path: "user_id",
-          select: "name email",
-        },
-      });
+    );
 
     res.send(updatedAppointment);
     // .populate("patient_id")
@@ -441,7 +432,15 @@ router.get("/recent-appointment/:patientId", async (req, res) => {
     })
       .sort({ "datetime.date": -1 })
       .limit(1)
-      .exec();
+      .exec()
+      .populate({
+        path: "psychologist_id",
+        select: "-onlineAppointment -onsiteAppointment",
+        populate: {
+          path: "user_id",
+          select: "name email",
+        },
+      });
 
     res.status(200).json(mostRecentAppointment);
   } catch (error) {
