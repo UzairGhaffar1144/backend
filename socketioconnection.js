@@ -292,7 +292,7 @@ function socketConnection(server) {
   // setTimeout(() => {
   //   sendAppointmentNotifications();
   // }, 30000);
-  setInterval(() => sendAppointmentNotifications(), 20 * 1000);
+  setInterval(() => sendAppointmentNotifications(), 60 * 10 * 1000);
 }
 
 module.exports = socketConnection;
