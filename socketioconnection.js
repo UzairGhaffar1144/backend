@@ -12,6 +12,7 @@ const Message = require("./models/message");
 const Chat = require("./models/chat");
 const { UserSocket } = require("./models/socket");
 const { forEach } = require("lodash");
+const { Notification } = require("./models/notification");
 
 // Usage: Call the `sendAppointmentNotifications` function with the `io` parameter from your socket connection setup.
 admin.initializeApp({
@@ -265,14 +266,14 @@ function socketConnection(server) {
     });
 
     // notification event for backend which will send to socket and save new notification
-    socket.on("sendNotification", async ({ user_id, type, message }) => {
-      const user = getUser(user_id);
+    socket.on("sendNotification", async ({ receiverId, type, message }) => {
+      const user = getUser(receiverId);
       io.to(user.socketId).emit("getNotification", {
         type,
         message,
       });
       const newNotification = new Notification({
-        user_id: user_id,
+        user_id: receiverId,
         type: type,
         message: message,
       });
