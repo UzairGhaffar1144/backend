@@ -423,7 +423,23 @@ router.get("/patient/:patientId", async (req, res) => {
     res.status(500).send("Server error");
   }
 });
+router.get("/recent-appointment/:patientId", async (req, res) => {
+  const { patientId } = req.params;
 
+  try {
+    const mostRecentAppointment = await Appointment.findOne({
+      patient_id: patientId,
+    })
+      .sort({ "datetime.date": -1 })
+      .limit(1)
+      .exec();
+
+    res.status(200).json(mostRecentAppointment);
+  } catch (error) {
+    console.error("Error retrieving the most recent appointment:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 //get all notes for specific patient id
 router.get("/notes/:patientid/:psychologistid", async (req, res) => {
   const patientId = req.params.patientid;
