@@ -429,18 +429,18 @@ router.get("/recent-appointment/:patientId", async (req, res) => {
   try {
     const mostRecentAppointment = await Appointment.findOne({
       patient_id: patientId,
+    }).populate({
+      path: "psychologist_id",
+      select: "-onlineAppointment -onsiteAppointment",
+      populate: {
+        path: "user_id",
+        select: "name email",
+      },
     })
       .sort({ "datetime.date": -1 })
       .limit(1)
       .exec()
-      .populate({
-        path: "psychologist_id",
-        select: "-onlineAppointment -onsiteAppointment",
-        populate: {
-          path: "user_id",
-          select: "name email",
-        },
-      });
+      ;
 
     res.status(200).json(mostRecentAppointment);
   } catch (error) {
