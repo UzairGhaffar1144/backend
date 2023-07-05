@@ -21,7 +21,7 @@ const notificationSchema = new mongoose.Schema({
   },
   createdAt: {
     type: Date,
-    default: Date.now,
+    default: () => new Date(Date.now() + 5 * 60 * 60 * 1000),
   },
 });
 

@@ -44,8 +44,14 @@ router.post("/register", async (req, res) => {
     userId: user._id,
     token: crypto.randomBytes(32).toString("hex"),
   }).save();
-  const url = `http://localhost:3000/users/${user.id}/verify/${verificationtoken.token}`;
-  await sendEmail(user.email, "Verify Email", url);
+  const otp = crypto.randomInt(1000, 9999).toString();
+  // Save the token in the session
+  req.session.resetToken = otp;
+  req.session.userId = user._id;
+  const verificationURL = `http://localhost:3000/users/${user.id}/verify/${verificationtoken.token}`;
+  const emailContent = `Your verification email:\n${verificationURL}\n\nYour OTP: ${otp}`;
+
+  await sendEmail(user.email, "Verify Email", emailContent);
   let token = jwt.sign(
     { _id: user._id, name: user.name, role: user.role },
     config.get("jwtPrivateKey")
@@ -91,6 +97,8 @@ router.get("/:id/verify/:token/", async (req, res) => {
     await user.save();
     await token.remove();
 
+    req.session.resetToken = null;
+    req.session.userId = null;
     res.status(200).send({ message: "Verification Successful" });
   } catch (error) {
     res.status(500).send({ message: "Internal Server Error" });
@@ -123,7 +131,7 @@ router.post("/passwordresetlink", async (req, res) => {
 router.post("/reset-password/:id/:token", async (req, res) => {
   const { newPassword } = req.body;
   const user = await User.findOne({ _id: req.params.id });
-  if (!user) return res.status(400).send({ message: "Invalid link" });
+  if (!user) return res.status(400).send({ message: "user not found link" });
   console.log(user);
   const token = await Token.findOne({
     userId: user._id,
@@ -144,16 +152,18 @@ router.post("/login", async (req, res) => {
   if (!user) return res.status(400).send("User Not Registered");
   let isValid = await bcrypt.compare(req.body.password, user.password);
   if (!isValid) return res.status(401).send("Invalid Password");
-  const notifications = await Notification.find({ user_id: user._id });
+  const notifications = await Notification.find({ user_id: user._id })
+    .sort({ createdAt: -1 })
+    .exec();
   console.log(notifications);
   user.password = undefined;
   let token = jwt.sign(
     { _id: user._id, name: user.name, role: user.role },
     config.get("jwtPrivateKey")
   );
-  // if (user.verified == false) {
-  //   return res.status(400).send("please verify account first from yur email ");
-  // }
+  if (user.verified == false) {
+    return res.status(400).send("please verify account first from yur email ");
+  }
 
   if (user.role == "psychologist") {
     let psychologist = await Psychologist.findOne({
@@ -221,8 +231,34 @@ router.post("/mreset-password", async (req, res) => {
   }
 });
 
+router.post("/mverifyemail-otp", async (req, res) => {
+  const { otpToken } = req.body;
+
+  try {
+    const user = await User.findById(req.session.userId);
+    if (!user) {
+      return res.status(400).send("User not found");
+    }
+    // Check if the OTP token matches the one stored in the session
+    if (req.session.resetToken !== otpToken) {
+      return res.status(400).send("Invalid token");
+    }
+
+    user.verified = true;
+    await user.save();
+
+    req.session.resetToken = null;
+    req.session.userId = null;
+    // Token verification successful
+    res.status(200).send("Token verified successfully");
+  } catch (error) {
+    console.error("Error verifying token:", error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
 // Verify OTP token
-router.post("/mverify-otp", (req, res) => {
+router.post("/mverify-otp", async (req, res) => {
   const { otpToken } = req.body;
 
   try {
@@ -257,9 +293,17 @@ router.post("/mupdate-password", async (req, res) => {
     await user.generateHashedPassword();
     await user.save();
 
-    // Clear the session
     req.session.resetToken = null;
     req.session.userId = null;
+    // Clear the session
+    // req.session.destroy((err) => {
+    //   if (err) {
+    //     console.error("Failed to destroy session:", err);
+    //   } else {
+    //     console.log("Session destroyed successfully");
+    //     res.sendStatus(200);
+    //   }
+    // });
 
     res.status(200).send("Password updated successfully");
   } catch (error) {

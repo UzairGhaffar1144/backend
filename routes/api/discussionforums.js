@@ -49,7 +49,9 @@ router.get("/", async (req, res) => {
       .populate({
         path: "comments.user_id",
         select: "-_id name",
-      });
+      })
+      .sort({ createdAt: -1 })
+      .exec();
     res.send(discussionforums);
   } catch (error) {
     console.error(error);
