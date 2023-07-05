@@ -10,7 +10,7 @@ const stripe = Stripe(
 const router = express.Router();
 
 router.post("/create-checkout-session", async (req, res) => {
-  const psychologistid = "6445177660b37600091742c1";
+  const psychologistid = req.body.psychologistId;
   const psychologist = await Psychologist.findById(psychologistid);
   const appointmenttype = "onsite";
   let fee = null;
